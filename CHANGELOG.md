@@ -7,16 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 - **Added**
-  - (placeholder)
+  - Added game task contracts, risk/authority resolution, deterministic task classification, and player-address TTS cache policy helpers.
 
 - **Changed**
-  - (placeholder)
+  - Updated feature flag contract to `ai.game-agentic-workloads.enabled` and added TTS integration flags for gameplay speech reuse paths.
 
 - **Fixed**
-  - (placeholder)
+  - Placeholder-only package surface by implementing concrete contracts for #273.
 
 - **Security**
-  - (placeholder)
+  - User/account identifiers are sanitized from default TTS render text.
 
 ## [0.1.2] - 2026-05-13
 
