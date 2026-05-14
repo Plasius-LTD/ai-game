@@ -92,5 +92,8 @@
   },
   "overrides": {
     "minimatch": "^10.2.1"
+  },
+  "dependencies": {
+    "@plasius/graph-contracts": "^0.1.4"
   }
 }
