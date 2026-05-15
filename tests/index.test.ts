@@ -108,6 +108,30 @@ describe("@plasius/ai-game", () => {
     expect(result.audit.result).toBe("deny");
   });
 
+  it("returns a deny audit result when any enabled task is blocked", () => {
+    const result = resolveAiGameTaskBatch({
+      actorRole: "player",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-blocked",
+          taskText: "Player asks the system to punish a faction member",
+        },
+        {
+          taskId: "task-allowed",
+          taskText: "NPC says the road is safe",
+        },
+      ],
+    });
+
+    expect(result.blockedTaskIds).toContain("task-blocked");
+    expect(result.allowedTaskIds).toContain("task-allowed");
+    expect(result.needsOperatorReview).toBe(true);
+    expect(result.audit.result).toBe("deny");
+  });
+
   it("keeps player names out of TTS render text and defaults to no-cache without near reuse", () => {
     const result = resolveAiGamePlayerAddressText({
       playerAddressText: "Welcome, Aria Valon, to the market",

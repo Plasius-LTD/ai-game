@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **Fixed**
   - Placeholder-only package surface by implementing concrete contracts for #273.
+  - Enabled task batches now return a deny audit result whenever any task is blocked.
 
 - **Security**
   - User/account identifiers are sanitized from default TTS render text.

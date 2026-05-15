@@ -421,7 +421,8 @@ export function resolveAiGameTaskBatch(
     reasonCodes.push(...decision.reasonCodes);
   }
 
-  const needsOperatorReview = reviewTaskIds.length > 0;
+  const hasBlockedTasks = blockedTaskIds.length > 0;
+  const needsOperatorReview = taskDecisions.some((decision) => decision.needsOperatorReview);
 
   return {
     requestedTasks: Object.freeze(buildRequestIds(requests)),
@@ -441,11 +442,7 @@ export function resolveAiGameTaskBatch(
       actorId: input.actorId,
       actorRole,
       evaluatedAtUtc: nowIsoString(),
-      result: needsOperatorReview
-        ? blockedTaskIds.length > 0
-          ? "deny"
-          : "defer"
-        : "allow",
+      result: hasBlockedTasks ? "deny" : needsOperatorReview ? "defer" : "allow",
     },
   };
 }
