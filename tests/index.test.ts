@@ -132,6 +132,37 @@ describe("@plasius/ai-game", () => {
     expect(result.audit.result).toBe("deny");
   });
 
+  it("allows system role to run high-impact tasks deterministically", () => {
+    const result = resolveAiGameTaskBatch({
+      actorRole: "system",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [{
+        taskId: "task-system",
+        taskText: "Apply an NPC action that summons two guards",
+      }],
+    });
+
+    expect(result.allowedTaskIds).toContain("task-system");
+    expect(result.needsOperatorReview).toBe(false);
+    expect(result.audit.result).toBe("allow");
+  });
+
+  it("returns an empty policy result for empty task batches", () => {
+    const result = resolveAiGameTaskBatch({
+      actorRole: "operator",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [],
+    });
+
+    expect(result.source).toBe("policy-empty");
+    expect(result.requestedTasks).toEqual([]);
+    expect(result.taskDecisions).toEqual([]);
+  });
+
   it("keeps player names out of TTS render text and defaults to no-cache without near reuse", () => {
     const result = resolveAiGamePlayerAddressText({
       playerAddressText: "Welcome, Aria Valon, to the market",
@@ -186,6 +217,31 @@ describe("@plasius/ai-game", () => {
 
     expect(result.source).toBe("policy-disabled");
     expect(result.ttsCachePolicy).toBe("no-cache");
+  });
+
+  it("returns no-cache for empty player address text", () => {
+    const result = resolveAiGamePlayerAddressText({
+      playerAddressText: "   ",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.ttsCacheEnabled]: true,
+      },
+    });
+
+    expect(result.source).toBe("policy-empty");
+    expect(result.reasonCodes).toContain("tts-empty-text");
+    expect(result.ttsCachePolicy).toBe("no-cache");
+  });
+
+  it("uses exact-cache when enabled text contains no private aliases", () => {
+    const result = resolveAiGamePlayerAddressText({
+      playerAddressText: "Welcome to the market",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.ttsCacheEnabled]: true,
+      },
+    });
+
+    expect(result.ttsCachePolicy).toBe("exact-cache");
+    expect(result.reasonCodes).toContain("tts-cache-exact");
   });
 
   it("exposes allowed cache policy constants", () => {
