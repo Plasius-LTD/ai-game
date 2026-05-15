@@ -14,6 +14,7 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 
 - **Changed**
   - Extended public package surface to include all world-event and gossip contract families needed by `ai-game` ingestion and projection consumers.
+  - Replaced the private graph-contracts type dependency with local public-safe aliases.
 
 - **Fixed**
   - (placeholder)
