@@ -83,12 +83,13 @@ describe("@plasius/ai-game", () => {
       ecology: -2,
       politics: 101,
       morale: 50,
-      magic: 12,
+      magic: Number.NaN,
       population: 25,
     });
 
     expect(impact.security).toBe(42);
     expect(impact.ecology).toBe(0);
+    expect(impact.magic).toBe(0);
     expect(impact.politics).toBe(100);
 
     const incident: WorldIncidentThread = {
@@ -150,5 +151,55 @@ describe("@plasius/ai-game", () => {
     expect(projected.redactedPayload).toBeDefined();
     expect(isGossipTopicActive(topic, 10)).toBe(true);
     expect(isGossipTopicCorrected(topic)).toBe(false);
+
+    expect(
+      projectTopicForAudience({ ...topic, expiresAtEpochMs: 5 }, projection, 10),
+    ).toMatchObject({
+      visible: false,
+      reasons: ["inactive-or-expired-topic"],
+    });
+
+    expect(
+      projectTopicForAudience(
+        topic,
+        {
+          ...projection,
+          faction: "rivals",
+        },
+        10,
+      ),
+    ).toMatchObject({
+      visible: false,
+      reasons: ["audience-not-authorized"],
+    });
+
+    expect(
+      projectTopicForAudience(
+        { ...topic, audienceScope: "faction" },
+        {
+          ...projection,
+          projectionMode: "npc-level",
+          requestedByNpcRef: "npc-1",
+          segmentRules: [
+            {
+              locality: [],
+              factions: ["merchants"],
+              relationshipScore: 1,
+            },
+          ],
+        },
+        10,
+      ),
+    ).toMatchObject({
+      visible: true,
+      reasons: ["npc-level-allowed"],
+    });
+
+    expect(
+      projectTopicForAudience({ ...topic, audienceScope: "faction" }, projection, 10),
+    ).toMatchObject({
+      visible: false,
+      reasons: ["scope-constraints"],
+    });
   });
 });
