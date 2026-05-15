@@ -267,7 +267,7 @@ export function classifyAiGameTask(taskText: string): AiGameTaskKind {
 }
 
 function resolveTaskAuthority(taskKind: AiGameTaskKind): AiGameTaskProfile {
-  return AI_GAME_TASK_PROFILE_BY_KIND[taskKind] ?? AI_GAME_TASK_PROFILE_BY_KIND.unknown;
+  return AI_GAME_TASK_PROFILE_BY_KIND[taskKind];
 }
 
 function resolveTaskDecision(
