@@ -103,6 +103,20 @@ describe("@plasius/ai-game", () => {
       affectedEventRefs: [],
     };
     expect(isIncidentResolved(incident)).toBe(true);
+    expect(isIncidentResolved({ ...incident, lifecycle: "expired" })).toBe(true);
+    expect(isIncidentResolved({ ...incident, lifecycle: "active" })).toBe(false);
+  });
+
+  it("defaults absent incident impact dimensions to zero", () => {
+    expect(normalizeIncidentImpactVector({})).toEqual({
+      security: 0,
+      economy: 0,
+      ecology: 0,
+      politics: 0,
+      morale: 0,
+      magic: 0,
+      population: 0,
+    });
   });
 
   it("projects topics by audience with scope gating", () => {
