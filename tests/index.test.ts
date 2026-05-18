@@ -38,6 +38,11 @@ describe("@plasius/ai-game", () => {
       .toBe("gossip");
   });
 
+  it("classifies empty and unknown game tasks as unknown", () => {
+    expect(classifyAiGameTask("   ")).toBe("unknown");
+    expect(classifyAiGameTask("Calculate a harmless weather forecast")).toBe("unknown");
+  });
+
   it("requires operator review for high-impact npc actions by player role", () => {
     const result = resolveAiGameTaskBatch({
       actorRole: "player",
@@ -242,6 +247,20 @@ describe("@plasius/ai-game", () => {
 
     expect(result.ttsCachePolicy).toBe("exact-cache");
     expect(result.reasonCodes).toContain("tts-cache-exact");
+  });
+
+  it("does not redact configured aliases that are absent from render text", () => {
+    const result = resolveAiGamePlayerAddressText({
+      playerAddressText: "Welcome to the market",
+      playerAlias: "Alice",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.ttsCacheEnabled]: true,
+      },
+    });
+
+    expect(result.renderText).toBe("Welcome to the market");
+    expect(result.reasonCodes).not.toContain("tts-redacted-alice");
+    expect(result.ttsCachePolicy).toBe("exact-cache");
   });
 
   it("exposes allowed cache policy constants", () => {
