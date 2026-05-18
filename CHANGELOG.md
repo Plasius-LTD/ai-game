@@ -2,15 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/)**, and this project adheres to **[Semantic Versioning](https://semver.org/spec/v2.0.0.html)**.
 
 ## [Unreleased]
 
 - **Added**
-  - (placeholder)
+  - Implemented canonical world event contracts with candidate and canonical envelopes, taxonomy, payload typing, and visibility classes.
+  - Added authoritative ingestion interfaces and replay-safe projection/checkpoint contracts.
+  - Added incident lifecycle, resolution link, and impact vector models.
+  - Added structured gossip topic contracts with lifecycle, confidence, and perspective projection projections.
+  - Documented the public `@plasius/ai-game` contract boundary for Quiet Measure hidden-character inference, mission probes, and Judgment verdict models while keeping raw runtime scores host-private by default.
 
 - **Changed**
-  - (placeholder)
+  - Extended public package surface to include all world-event and gossip contract families needed by `ai-game` ingestion and projection consumers.
 
 - **Fixed**
   - (placeholder)
