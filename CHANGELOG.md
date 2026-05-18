@@ -2,22 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/)**, and this project adheres to **[Semantic Versioning](https://semver.org/spec/v2.0.0.html)**.
 
 ## [Unreleased]
 
 - **Added**
-  - Added game task contracts, risk/authority resolution, deterministic task classification, and player-address TTS cache policy helpers.
+  - Implemented canonical world event contracts with candidate and canonical envelopes, taxonomy, payload typing, and visibility classes.
+  - Added authoritative ingestion interfaces and replay-safe projection/checkpoint contracts.
+  - Added incident lifecycle, resolution link, and impact vector models.
+  - Added structured gossip topic contracts with lifecycle, confidence, and perspective projection projections.
 
 - **Changed**
-  - Updated feature flag contract to `ai.game-agentic-workloads.enabled` and added TTS integration flags for gameplay speech reuse paths.
+  - Extended public package surface to include all world-event and gossip contract families needed by `ai-game` ingestion and projection consumers.
+  - Replaced the private graph-contracts type dependency with local public-safe aliases.
 
 - **Fixed**
-  - Placeholder-only package surface by implementing concrete contracts for #273.
-  - Enabled task batches now return a deny audit result whenever any task is blocked.
+  - (placeholder)
 
 - **Security**
-  - User/account identifiers are sanitized from default TTS render text.
+  - (placeholder)
 
 ## [0.1.2] - 2026-05-13
 
