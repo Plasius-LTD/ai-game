@@ -1,23 +1,41 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  AI_GAME_FEATURE_FLAGS,
+  AI_GAME_EVENT_CONTRACTS_FEATURE_FLAG_ID,
+  AI_GAME_EVENT_INGESTION_FEATURE_FLAG_ID,
+  AI_GAME_GOSSIP_LIFECYCLE_FEATURE_FLAG_ID,
+  AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID,
+  AI_GAME_INCIDENT_IMPACT_FEATURE_FLAG_ID,
+  AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
   AI_GAME_FEATURE_FLAG_ID,
-  AI_GAME_PACKAGE,
-  AI_GAME_TTS_CACHE_POLICIES,
   AI_GAME_ENV_PREFIX,
-  classifyAiGameTask,
-  resolveAiGamePlayerAddressText,
-  resolveAiGameTaskBatch,
+  AI_GAME_PACKAGE,
+  isCanonicalWorldEvent,
+  isCandidateWorldEvent,
+  isIncidentResolved,
+  isGossipTopicActive,
+  isGossipTopicCorrected,
+  normalizeIncidentImpactVector,
   packageDescriptor,
+  projectTopicForAudience,
+  type WorldIncidentThread,
+  type WorldIncidentImpactVector,
+  type GossipTopic,
+  type GossipPerspectiveProjection,
 } from "../src/index.js";
 
 describe("@plasius/ai-game", () => {
-  it("exports the package descriptor contract", () => {
+  it("exports package and feature-flag contract", () => {
     expect(packageDescriptor.packageName).toBe(AI_GAME_PACKAGE);
     expect(packageDescriptor.featureFlagId).toBe(AI_GAME_FEATURE_FLAG_ID);
     expect(packageDescriptor.envPrefix).toBe(AI_GAME_ENV_PREFIX);
     expect(packageDescriptor.summary.length).toBeGreaterThan(0);
+    expect(AI_GAME_EVENT_CONTRACTS_FEATURE_FLAG_ID).toBe("ai.game.event-recorder.contracts.enabled");
+    expect(AI_GAME_EVENT_INGESTION_FEATURE_FLAG_ID).toBe("ai.game.event-recorder.ingestion.enabled");
+    expect(AI_GAME_INCIDENT_IMPACT_FEATURE_FLAG_ID).toBe("ai.game.event-recorder.impact.enabled");
+    expect(AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.topics.enabled");
+    expect(AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.perspective.enabled");
+    expect(AI_GAME_GOSSIP_LIFECYCLE_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.lifecycle.enabled");
   });
 
   it("declares expected feature flags", () => {
@@ -49,104 +67,162 @@ describe("@plasius/ai-game", () => {
       featureFlags: {
         [AI_GAME_FEATURE_FLAGS.workloads]: true,
       },
-      requests: [{
-        taskId: "task-1",
-        taskText: "A player NPC action should summon a guard and lock the gate",
-      }],
-    });
+      tags: [],
+      candidateId: "cand-1",
+      submittedAtEpochMs: 1,
+      submissionChannel: "system",
+    } as const;
+    const canonical = {
+      ...candidate,
+      recordType: "canonical",
+      canonicalEventId: "can-1",
+      approvedBy: "moderator",
+      approvedAtEpochMs: 2,
+    } as const;
 
-    expect(result.reviewTaskIds).toContain("task-1");
-    expect(result.allowedTaskIds).toHaveLength(0);
-    expect(result.taskDecisions[0]?.needsOperatorReview).toBe(true);
-    expect(result.taskDecisions[0]?.decision).toBe("operator-review");
-    expect(result.audit.result).toBe("defer");
+    expect(isCandidateWorldEvent(candidate)).toBe(true);
+    expect(isCanonicalWorldEvent(candidate)).toBe(false);
+    expect(isCanonicalWorldEvent(canonical)).toBe(true);
   });
 
-  it("routes operator role tasks to review for high-impact tasks", () => {
-    const result = resolveAiGameTaskBatch({
-      actorRole: "operator",
-      featureFlags: {
-        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+  it("normalizes incident impact vectors and resolves lifecycle state", () => {
+    const impact: WorldIncidentImpactVector = normalizeIncidentImpactVector({
+      security: 42,
+      economy: 10,
+      ecology: -2,
+      politics: 101,
+      morale: 50,
+      magic: Number.NaN,
+      population: 25,
+    });
+
+    expect(impact.security).toBe(42);
+    expect(impact.ecology).toBe(0);
+    expect(impact.magic).toBe(0);
+    expect(impact.politics).toBe(100);
+
+    const incident: WorldIncidentThread = {
+      incidentId: "inc-1",
+      scope: "regional",
+      lifecycle: "resolved",
+      causeEventRef: "evt-1",
+      impact,
+      openedAtEpochMs: 1,
+      updatedAtEpochMs: 2,
+      affectedEventRefs: [],
+    };
+    expect(isIncidentResolved(incident)).toBe(true);
+    expect(isIncidentResolved({ ...incident, lifecycle: "expired" })).toBe(true);
+    expect(isIncidentResolved({ ...incident, lifecycle: "active" })).toBe(false);
+  });
+
+  it("defaults absent incident impact dimensions to zero", () => {
+    expect(normalizeIncidentImpactVector({})).toEqual({
+      security: 0,
+      economy: 0,
+      ecology: 0,
+      politics: 0,
+      morale: 0,
+      magic: 0,
+      population: 0,
+    });
+  });
+
+  it("projects topics by audience with scope gating", () => {
+    const topic: GossipTopic = {
+      topicId: "gossip-1",
+      status: "active",
+      emittedAtEpochMs: 1,
+      expiresAtEpochMs: 1_000,
+      sourceLink: {
+        sourceType: "event",
+        sourceId: "evt-1",
       },
-      requests: [{
-        taskId: "task-2",
-        taskText: "Apply an NPC action that summons two guards",
-      }],
-    });
-
-    expect(result.allowedTaskIds).toHaveLength(0);
-    expect(result.reviewTaskIds).toContain("task-2");
-    expect(result.audit.result).toBe("defer");
-  });
-
-  it("allows deterministic NPC dialogue tasks", () => {
-    const result = resolveAiGameTaskBatch({
-      actorRole: "player",
-      featureFlags: {
-        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      sourceEventRef: "evt-1",
+      payload: {
+        factSummary: "Rumors spread about a warfront.",
+        certainty: 0.6,
+        salience: "high",
+        evidenceRefs: [{ sourceType: "event", sourceId: "evt-1" }],
+        speechHint: {
+          sentenceTone: "formal",
+          localizedHintKey: "gossip.warfront",
+        },
       },
-      requests: [{
-        taskId: "task-3",
-        taskText: "NPC says you should stay here and wait",
-      }],
-    });
+      confidenceLevel: "strong",
+      audienceScope: "public",
+    };
 
-    expect(result.allowedTaskIds).toContain("task-3");
-    expect(result.reviewTaskIds).toHaveLength(0);
-    expect(result.blockedTaskIds).toHaveLength(0);
-  });
-
-  it("blocks all game-task resolution when feature flag is disabled", () => {
-    const result = resolveAiGameTaskBatch({
-      actorRole: "player",
-      requests: [
+    const projection: GossipPerspectiveProjection = {
+      projectionMode: "segment-level",
+      audienceSegment: "public",
+      locality: "north",
+      faction: "merchants",
+      segmentRules: [
         {
-          taskId: "task-4",
-          taskText: "Player asks to punish an NPC",
+          locality: ["north"],
+          factions: ["merchants", "knights"],
+          relationshipScore: 1,
         },
       ],
+      witnessChannels: [],
+    };
+
+    const projected = projectTopicForAudience(topic, projection, 10);
+    expect(projected.visible).toBe(true);
+    expect(projected.topicId).toBe("gossip-1");
+    expect(projected.redactedPayload).toBeDefined();
+    expect(isGossipTopicActive(topic, 10)).toBe(true);
+    expect(isGossipTopicCorrected(topic)).toBe(false);
+
+    expect(
+      projectTopicForAudience({ ...topic, expiresAtEpochMs: 5 }, projection, 10),
+    ).toMatchObject({
+      visible: false,
+      reasons: ["inactive-or-expired-topic"],
     });
 
-    expect(result.source).toBe("policy-disabled");
-    expect(result.blockedTaskIds).toContain("task-4");
-    expect(result.allowedTaskIds).toHaveLength(0);
-    expect(result.audit.result).toBe("deny");
-  });
-
-  it("returns a deny audit result when any enabled task is blocked", () => {
-    const result = resolveAiGameTaskBatch({
-      actorRole: "player",
-      featureFlags: {
-        [AI_GAME_FEATURE_FLAGS.workloads]: true,
-      },
-      requests: [
+    expect(
+      projectTopicForAudience(
+        topic,
         {
-          taskId: "task-blocked",
-          taskText: "Player asks the system to punish a faction member",
+          ...projection,
+          faction: "rivals",
         },
-        {
-          taskId: "task-allowed",
-          taskText: "NPC says the road is safe",
-        },
-      ],
+        10,
+      ),
+    ).toMatchObject({
+      visible: false,
+      reasons: ["audience-not-authorized"],
     });
 
-    expect(result.blockedTaskIds).toContain("task-blocked");
-    expect(result.allowedTaskIds).toContain("task-allowed");
-    expect(result.needsOperatorReview).toBe(true);
-    expect(result.audit.result).toBe("deny");
-  });
+    expect(
+      projectTopicForAudience(
+        { ...topic, audienceScope: "faction" },
+        {
+          ...projection,
+          projectionMode: "npc-level",
+          requestedByNpcRef: "npc-1",
+          segmentRules: [
+            {
+              locality: [],
+              factions: ["merchants"],
+              relationshipScore: 1,
+            },
+          ],
+        },
+        10,
+      ),
+    ).toMatchObject({
+      visible: true,
+      reasons: ["npc-level-allowed"],
+    });
 
-  it("allows system role to run high-impact tasks deterministically", () => {
-    const result = resolveAiGameTaskBatch({
-      actorRole: "system",
-      featureFlags: {
-        [AI_GAME_FEATURE_FLAGS.workloads]: true,
-      },
-      requests: [{
-        taskId: "task-system",
-        taskText: "Apply an NPC action that summons two guards",
-      }],
+    expect(
+      projectTopicForAudience({ ...topic, audienceScope: "faction" }, projection, 10),
+    ).toMatchObject({
+      visible: false,
+      reasons: ["scope-constraints"],
     });
 
     expect(result.allowedTaskIds).toContain("task-system");

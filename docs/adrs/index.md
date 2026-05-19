@@ -1,4 +1,9 @@
 # Architecture Decision Records
 
 - [ADR-0001: @plasius/ai-game Package Boundary](./adr-0001-package-boundary.md)
-- [ADR-0002: Game AI Task Contracts and Speech Cache Safety](./adr-0002-game-task-contracts.md)
+- [ADR-0002: Canonical world event envelope and classification](./adr-0002-canonical-world-event-envelope-and-classification.md)
+- [ADR-0003: Authoritative ingestion, append-only ledger, and projector interfaces](./adr-0003-authoritative-ingestion-append-only-ledger-and-projections.md)
+- [ADR-0004: Incident lifecycle, resolution, and world impact vectors](./adr-0004-incident-lifecycle-resolution-and-world-impact.md)
+- [ADR-0005: Structured gossip topics as the output boundary](./adr-0005-structured-gossip-topics-as-the-output-boundary.md)
+- [ADR-0006: Perspective-gated relative knowledge projection](./adr-0006-perspective-gated-relative-knowledge-projection.md)
+- [ADR-0007: Gossip spread, decay, correction, and resolution](./adr-0007-gossip-spread-decay-correction-and-resolution.md)

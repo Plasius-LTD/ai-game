@@ -5,94 +5,9 @@ export interface AiPackageDescriptor {
   readonly summary: string;
 }
 
-export interface AiGameTaskRequest {
-  readonly taskId: string;
-  readonly taskText: string;
-  readonly taskKind?: AiGameTaskKind;
-}
-
-export interface AiGameTaskDecision {
-  readonly taskId: string;
-  readonly taskKind: AiGameTaskKind;
-  readonly riskClass: AiGameTaskRiskClass;
-  readonly authorityBoundary: AiGameAuthorityBoundary;
-  readonly decision: AiGameTaskDecisionResult;
-  readonly needsOperatorReview: boolean;
-  readonly reasonCodes: readonly string[];
-}
-
-export interface AiGameTaskResolution {
-  readonly requestedTasks: readonly string[];
-  readonly taskDecisions: readonly AiGameTaskDecision[];
-  readonly allowedTaskIds: readonly string[];
-  readonly reviewTaskIds: readonly string[];
-  readonly blockedTaskIds: readonly string[];
-  readonly needsOperatorReview: boolean;
-  readonly featureEnabled: boolean;
-  readonly enabledFeatureFlags: readonly AiGameFeatureFlagKey[];
-  readonly source: "policy" | "policy-disabled" | "policy-empty";
-  readonly audit: {
-    readonly policyId: string;
-    readonly policyVersion: string;
-    readonly correlationId: string;
-    readonly requestId?: string;
-    readonly actorId?: string;
-    readonly actorRole: AiGameActorRole;
-    readonly evaluatedAtUtc: string;
-    readonly result: AiGameTaskResult;
-  };
-}
-
-export interface ResolveAiGameTaskInput {
-  readonly requests: readonly AiGameTaskRequest[];
-  readonly featureFlags?: AiGameFeatureFlagSnapshot;
-  readonly actorRole?: AiGameActorRole;
-  readonly policyId?: string;
-  readonly policyVersion?: string;
-  readonly correlationId?: string;
-  readonly requestId?: string;
-  readonly actorId?: string;
-  readonly reasonCodes?: readonly string[];
-}
-
-export interface ResolveAiGamePlayerAddressInput {
-  readonly playerAddressText: string;
-  readonly playerAlias?: string;
-  readonly accountAlias?: string;
-  readonly featureFlags?: AiGameFeatureFlagSnapshot;
-  readonly actorRole?: AiGameActorRole;
-  readonly policyId?: string;
-  readonly policyVersion?: string;
-  readonly correlationId?: string;
-  readonly requestId?: string;
-  readonly actorId?: string;
-  readonly reasonCodes?: readonly string[];
-}
-
-export interface ResolveAiGamePlayerAddressResult {
-  readonly sourceText: string;
-  readonly renderText: string;
-  readonly ttsCachePolicy: AiGameTtsCachePolicy;
-  readonly reasonCodes: readonly string[];
-  readonly enabledFeatureFlags: readonly AiGameFeatureFlagKey[];
-  readonly source: "policy" | "policy-disabled" | "policy-empty";
-  readonly audit: {
-    readonly policyId: string;
-    readonly policyVersion: string;
-    readonly correlationId: string;
-    readonly requestId?: string;
-    readonly actorId?: string;
-    readonly actorRole: AiGameActorRole;
-    readonly evaluatedAtUtc: string;
-    readonly cachePolicy: AiGameTtsCachePolicy;
-  };
-}
-
-export type AiGameFeatureFlagSnapshot = Readonly<Record<string, boolean | undefined>>;
-
 export const AI_GAME_PACKAGE = "@plasius/ai-game";
-export const AI_GAME_FEATURE_FLAG_ID = "ai.game-agentic-workloads.enabled";
 export const AI_GAME_ENV_PREFIX = "AI_GAME";
+export const AI_GAME_FEATURE_FLAG_ID = "ai.game.enabled";
 
 export const AI_GAME_FEATURE_FLAGS = {
   workloads: AI_GAME_FEATURE_FLAG_ID,
@@ -587,6 +502,39 @@ export const packageDescriptor: AiPackageDescriptor = Object.freeze({
   packageName: AI_GAME_PACKAGE,
   featureFlagId: AI_GAME_FEATURE_FLAG_ID,
   envPrefix: AI_GAME_ENV_PREFIX,
-  summary:
-    "Game-domain AI contracts for player action validation, NPC actions, gossip, and feedback.",
+  summary: "Game-domain AI contracts for event recorder, canonical world-state, and NPC gossip projections.",
 });
+
+export const aiGameFeatureFlags = Object.freeze({
+  contract: AI_GAME_EVENT_CONTRACTS_FEATURE_FLAG_ID,
+  ingestion: AI_GAME_EVENT_INGESTION_FEATURE_FLAG_ID,
+  incident: AI_GAME_INCIDENT_IMPACT_FEATURE_FLAG_ID,
+  gossipTopics: AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID,
+  gossipPerspective: AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
+  gossipLifecycle: AI_GAME_GOSSIP_LIFECYCLE_FEATURE_FLAG_ID,
+});
+
+export const gameEventFeatureFlags = Object.freeze([
+  aiGameFeatureFlags.contract,
+  aiGameFeatureFlags.ingestion,
+  aiGameFeatureFlags.incident,
+  aiGameFeatureFlags.gossipTopics,
+  aiGameFeatureFlags.gossipPerspective,
+  aiGameFeatureFlags.gossipLifecycle,
+]);
+
+export {
+  isCanonicalWorldEvent,
+  isCandidateWorldEvent,
+  isIncidentResolved,
+  normalizeIncidentImpactVector,
+} from "./world-events.js";
+
+export {
+  isGossipTopicActive,
+  isGossipTopicCorrected,
+  projectTopicForAudience,
+} from "./gossip.js";
+
+export * from "./world-events.js";
+export * from "./gossip.js";
