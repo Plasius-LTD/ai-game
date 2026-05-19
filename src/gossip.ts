@@ -139,7 +139,6 @@ export function projectTopicForAudience(
   if (
     projection.projectionMode === "npc-level" &&
     projection.requestedByNpcRef &&
-    topic.audienceScope !== "public" &&
     projection.requestedByNpcRef.length > 0
   ) {
     return {
