@@ -1,4 +1,11 @@
-import type { Version, JsonValue } from "@plasius/graph-contracts";
+export type Version = string;
+export type JsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue };
 
 export type GameWorldEventType =
   | "monster.spawned"

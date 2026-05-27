@@ -210,6 +210,21 @@ describe("@plasius/ai-game", () => {
     });
 
     expect(
+      projectTopicForAudience(
+        topic,
+        {
+          ...projection,
+          projectionMode: "npc-level",
+          requestedByNpcRef: "npc-1",
+        },
+        10,
+      ),
+    ).toMatchObject({
+      visible: true,
+      reasons: ["npc-level-allowed"],
+    });
+
+    expect(
       projectTopicForAudience({ ...topic, audienceScope: "faction" }, projection, 10),
     ).toMatchObject({
       visible: false,
