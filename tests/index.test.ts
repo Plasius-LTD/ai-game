@@ -48,7 +48,7 @@ describe("@plasius/ai-game", () => {
     expect(classifyAiGameTask("summon the elder dragon near town")).toBe("npc-action");
     expect(classifyAiGameTask("The guard says hello")).toBe("npc-dialogue");
     expect(classifyAiGameTask("Rumors are spreading through the tavern")).toBe("gossip");
-    expect(classifyAiGameTask("ban this faction from the region")).toBe("governance-feedback");
+    expect(classifyAiGameTask("punish this faction for griefing")).toBe("governance-feedback");
     expect(classifyAiGameTask("Player feedback report")).toBe("feedback");
     expect(classifyAiGameTask("   ")).toBe("unknown");
     expect(classifyAiGameTask("Calculate a harmless weather forecast")).toBe("unknown");
@@ -67,7 +67,7 @@ describe("@plasius/ai-game", () => {
         },
         {
           taskId: "task-blocked",
-          taskText: "ban and seize faction property",
+          taskText: "punish and seize faction property",
         },
       ],
     });
