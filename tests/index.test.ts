@@ -77,6 +77,22 @@ describe("@plasius/ai-game", () => {
     expect(result.blockedTaskIds).toContain("task-blocked");
     expect(result.needsOperatorReview).toBe(true);
     expect(result.audit.result).toBe("deny");
+
+    const deterministic = resolveAiGameTaskBatch({
+      actorRole: "player",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-dialogue",
+          taskText: "The guard says hello",
+        },
+      ],
+    });
+
+    expect(deterministic.allowedTaskIds).toEqual(["task-dialogue"]);
+    expect(deterministic.taskDecisions[0]?.authorityBoundary).toBe("deterministic");
   });
 
   it("allows system-originated review-bound work and preserves empty batches", () => {
@@ -310,6 +326,10 @@ describe("@plasius/ai-game", () => {
     ).toMatchObject({
       visible: true,
       reasons: ["npc-level-allowed"],
+    });
+    expect(projectTopicForAudience({ ...topic, audienceScope: "faction" }, projection, 10)).toMatchObject({
+      visible: false,
+      reasons: ["scope-constraints"],
     });
   });
 });
