@@ -8,6 +8,12 @@ export interface AiPackageDescriptor {
 export const AI_GAME_PACKAGE = "@plasius/ai-game";
 export const AI_GAME_ENV_PREFIX = "AI_GAME";
 export const AI_GAME_FEATURE_FLAG_ID = "ai.game.enabled";
+export const AI_GAME_EVENT_CONTRACTS_FEATURE_FLAG_ID = "ai.game.event-recorder.contracts.enabled";
+export const AI_GAME_EVENT_INGESTION_FEATURE_FLAG_ID = "ai.game.event-recorder.ingestion.enabled";
+export const AI_GAME_INCIDENT_IMPACT_FEATURE_FLAG_ID = "ai.game.event-recorder.impact.enabled";
+export const AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID = "ai.game.npc-gossip.topics.enabled";
+export const AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID = "ai.game.npc-gossip.perspective.enabled";
+export const AI_GAME_GOSSIP_LIFECYCLE_FEATURE_FLAG_ID = "ai.game.npc-gossip.lifecycle.enabled";
 
 export const AI_GAME_FEATURE_FLAGS = {
   workloads: AI_GAME_FEATURE_FLAG_ID,
@@ -17,6 +23,8 @@ export const AI_GAME_FEATURE_FLAGS = {
 
 export type AiGameFeatureFlagKey =
   (typeof AI_GAME_FEATURE_FLAGS)[keyof typeof AI_GAME_FEATURE_FLAGS];
+
+export type AiGameFeatureFlagSnapshot = Partial<Record<AiGameFeatureFlagKey, boolean>>;
 
 export const AI_GAME_TASK_KINDS = [
   "player-action-validation",
@@ -70,6 +78,85 @@ export type AiGameTtsCachePolicy =
 export const AI_GAME_ACTOR_ROLES = ["player", "npc", "operator", "system"] as const;
 
 export type AiGameActorRole = (typeof AI_GAME_ACTOR_ROLES)[number];
+
+export interface AiGameTaskRequest {
+  readonly taskId: string;
+  readonly taskText: string;
+  readonly taskKind?: AiGameTaskKind;
+}
+
+export interface AiGameTaskDecision {
+  readonly taskId: string;
+  readonly taskKind: AiGameTaskKind;
+  readonly riskClass: AiGameTaskRiskClass;
+  readonly authorityBoundary: AiGameAuthorityBoundary;
+  readonly decision: AiGameTaskDecisionResult;
+  readonly needsOperatorReview: boolean;
+  readonly reasonCodes: readonly string[];
+}
+
+export interface AiGamePolicyAuditBase {
+  readonly policyId: string;
+  readonly policyVersion: string;
+  readonly correlationId: string;
+  readonly requestId?: string;
+  readonly actorId?: string;
+  readonly actorRole: AiGameActorRole;
+  readonly evaluatedAtUtc: string;
+}
+
+export interface ResolveAiGameTaskInput {
+  readonly actorRole?: AiGameActorRole;
+  readonly actorId?: string;
+  readonly requestId?: string;
+  readonly correlationId?: string;
+  readonly policyId?: string;
+  readonly policyVersion?: string;
+  readonly featureFlags?: AiGameFeatureFlagSnapshot;
+  readonly requests: readonly AiGameTaskRequest[];
+  readonly reasonCodes?: readonly string[];
+}
+
+export interface AiGameTaskResolution {
+  readonly requestedTasks: readonly string[];
+  readonly taskDecisions: readonly AiGameTaskDecision[];
+  readonly allowedTaskIds: readonly string[];
+  readonly reviewTaskIds: readonly string[];
+  readonly blockedTaskIds: readonly string[];
+  readonly needsOperatorReview: boolean;
+  readonly featureEnabled: boolean;
+  readonly enabledFeatureFlags: readonly AiGameFeatureFlagKey[];
+  readonly source: "policy" | "policy-disabled" | "policy-empty";
+  readonly audit: AiGamePolicyAuditBase & {
+    readonly result: AiGameTaskResult;
+  };
+}
+
+export interface ResolveAiGamePlayerAddressInput {
+  readonly playerAddressText: string;
+  readonly playerAlias?: string;
+  readonly accountAlias?: string;
+  readonly actorRole?: AiGameActorRole;
+  readonly actorId?: string;
+  readonly requestId?: string;
+  readonly correlationId?: string;
+  readonly policyId?: string;
+  readonly policyVersion?: string;
+  readonly featureFlags?: AiGameFeatureFlagSnapshot;
+  readonly reasonCodes?: readonly string[];
+}
+
+export interface ResolveAiGamePlayerAddressResult {
+  readonly sourceText: string;
+  readonly renderText: string;
+  readonly ttsCachePolicy: AiGameTtsCachePolicy;
+  readonly reasonCodes: readonly string[];
+  readonly enabledFeatureFlags: readonly AiGameFeatureFlagKey[];
+  readonly source: "policy" | "policy-disabled" | "policy-empty";
+  readonly audit: AiGamePolicyAuditBase & {
+    readonly cachePolicy: AiGameTtsCachePolicy;
+  };
+}
 
 interface AiGameTaskProfile {
   readonly riskClass: AiGameTaskRiskClass;
