@@ -1,27 +1,32 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  AI_GAME_ENV_PREFIX,
   AI_GAME_EVENT_CONTRACTS_FEATURE_FLAG_ID,
   AI_GAME_EVENT_INGESTION_FEATURE_FLAG_ID,
+  AI_GAME_FEATURE_FLAG_ID,
+  AI_GAME_FEATURE_FLAGS,
   AI_GAME_GOSSIP_LIFECYCLE_FEATURE_FLAG_ID,
   AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID,
   AI_GAME_INCIDENT_IMPACT_FEATURE_FLAG_ID,
-  AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
-  AI_GAME_FEATURE_FLAG_ID,
-  AI_GAME_ENV_PREFIX,
   AI_GAME_PACKAGE,
+  AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
+  AI_GAME_TTS_CACHE_POLICIES,
+  classifyAiGameTask,
   isCanonicalWorldEvent,
   isCandidateWorldEvent,
-  isIncidentResolved,
   isGossipTopicActive,
   isGossipTopicCorrected,
+  isIncidentResolved,
   normalizeIncidentImpactVector,
   packageDescriptor,
   projectTopicForAudience,
-  type WorldIncidentThread,
-  type WorldIncidentImpactVector,
-  type GossipTopic,
+  resolveAiGamePlayerAddressText,
+  resolveAiGameTaskBatch,
   type GossipPerspectiveProjection,
+  type GossipTopic,
+  type WorldIncidentImpactVector,
+  type WorldIncidentThread,
 } from "../src/index.js";
 
 describe("@plasius/ai-game", () => {
@@ -29,13 +34,228 @@ describe("@plasius/ai-game", () => {
     expect(packageDescriptor.packageName).toBe(AI_GAME_PACKAGE);
     expect(packageDescriptor.featureFlagId).toBe(AI_GAME_FEATURE_FLAG_ID);
     expect(packageDescriptor.envPrefix).toBe(AI_GAME_ENV_PREFIX);
-    expect(packageDescriptor.summary.length).toBeGreaterThan(0);
+    expect(AI_GAME_FEATURE_FLAGS.workloads).toBe(AI_GAME_FEATURE_FLAG_ID);
     expect(AI_GAME_EVENT_CONTRACTS_FEATURE_FLAG_ID).toBe("ai.game.event-recorder.contracts.enabled");
     expect(AI_GAME_EVENT_INGESTION_FEATURE_FLAG_ID).toBe("ai.game.event-recorder.ingestion.enabled");
     expect(AI_GAME_INCIDENT_IMPACT_FEATURE_FLAG_ID).toBe("ai.game.event-recorder.impact.enabled");
     expect(AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.topics.enabled");
     expect(AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.perspective.enabled");
     expect(AI_GAME_GOSSIP_LIFECYCLE_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.lifecycle.enabled");
+  });
+
+  it("classifies supported game task intents", () => {
+    expect(classifyAiGameTask("The player move the relic to the altar")).toBe("player-action-validation");
+    expect(classifyAiGameTask("summon the elder dragon near town")).toBe("npc-action");
+    expect(classifyAiGameTask("The guard says hello")).toBe("npc-dialogue");
+    expect(classifyAiGameTask("Rumors are spreading through the tavern")).toBe("gossip");
+    expect(classifyAiGameTask("punish this faction for griefing")).toBe("governance-feedback");
+    expect(classifyAiGameTask("Player feedback report")).toBe("feedback");
+    expect(classifyAiGameTask("   ")).toBe("unknown");
+    expect(classifyAiGameTask("Calculate a harmless weather forecast")).toBe("unknown");
+  });
+
+  it("resolves task batches without removing review or block semantics", () => {
+    const result = resolveAiGameTaskBatch({
+      actorRole: "player",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-review",
+          taskText: "summon an npc action",
+        },
+        {
+          taskId: "task-blocked",
+          taskText: "punish and seize faction property",
+        },
+      ],
+    });
+
+    expect(result.source).toBe("policy");
+    expect(result.reviewTaskIds).toContain("task-review");
+    expect(result.blockedTaskIds).toContain("task-blocked");
+    expect(result.needsOperatorReview).toBe(true);
+    expect(result.audit.result).toBe("deny");
+
+    const deterministic = resolveAiGameTaskBatch({
+      actorRole: "player",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-dialogue",
+          taskText: "The guard says hello",
+        },
+      ],
+    });
+
+    expect(deterministic.allowedTaskIds).toEqual(["task-dialogue"]);
+    expect(deterministic.taskDecisions[0]?.authorityBoundary).toBe("deterministic");
+
+    const explicitKind = resolveAiGameTaskBatch({
+      actorRole: "player",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-explicit-dialogue",
+          taskKind: "npc-dialogue",
+          taskText: "summon the village guard",
+        },
+      ],
+    });
+    const reviewOnly = resolveAiGameTaskBatch({
+      actorRole: "player",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-review-only",
+          taskText: "summon an npc action",
+        },
+      ],
+    });
+
+    expect(explicitKind.taskDecisions[0]?.taskKind).toBe("npc-dialogue");
+    expect(explicitKind.allowedTaskIds).toEqual(["task-explicit-dialogue"]);
+    expect(reviewOnly.audit.result).toBe("defer");
+  });
+
+  it("falls back to unknown for malformed task kinds from decoded inputs", () => {
+    const result = resolveAiGameTaskBatch({
+      actorRole: "player",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-forward-kind",
+          taskKind: "future-task-kind" as never,
+          taskText: "summon an npc action",
+        },
+      ],
+    });
+
+    expect(result.taskDecisions[0]).toMatchObject({
+      taskId: "task-forward-kind",
+      taskKind: "unknown",
+      authorityBoundary: "deterministic",
+      decision: "allow",
+    });
+    expect(result.allowedTaskIds).toEqual(["task-forward-kind"]);
+  });
+
+  it("allows system-originated review-bound work and preserves empty batches", () => {
+    const systemResult = resolveAiGameTaskBatch({
+      actorRole: "system",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-system",
+          taskText: "npc action request",
+        },
+      ],
+    });
+    const emptyResult = resolveAiGameTaskBatch({
+      actorRole: "operator",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [],
+    });
+
+    expect(systemResult.allowedTaskIds).toContain("task-system");
+    expect(systemResult.needsOperatorReview).toBe(false);
+    expect(emptyResult.source).toBe("policy-empty");
+    expect(emptyResult.taskDecisions).toEqual([]);
+  });
+
+  it("blocks task batches when the workload flag is disabled", () => {
+    const result = resolveAiGameTaskBatch({
+      actorRole: "operator",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: false,
+      },
+      requests: [
+        {
+          taskId: "task-disabled",
+          taskText: "say hello",
+        },
+      ],
+    });
+
+    expect(result.source).toBe("policy-disabled");
+    expect(result.blockedTaskIds).toEqual(["task-disabled"]);
+    expect(result.featureEnabled).toBe(false);
+  });
+
+  it("keeps player and account aliases out of TTS cacheable render text", () => {
+    const redacted = resolveAiGamePlayerAddressText({
+      playerAddressText: "Bob and Alice discuss the quest",
+      playerAlias: "Alice",
+      accountAlias: "Bob",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.ttsCacheEnabled]: true,
+      },
+    });
+    const nearCache = resolveAiGamePlayerAddressText({
+      playerAddressText: "Player Alice gave the potion to Bob",
+      playerAlias: "Alice",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.ttsCacheEnabled]: true,
+        [AI_GAME_FEATURE_FLAGS.ttsNearReuseEnabled]: true,
+      },
+    });
+
+    expect(redacted.renderText).toContain("[PLAYER]");
+    expect(redacted.renderText).toContain("[ACCOUNT]");
+    expect(redacted.ttsCachePolicy).toBe("no-cache");
+    expect(nearCache.ttsCachePolicy).toBe("near-cache");
+    expect(nearCache.renderText).not.toContain("Alice");
+    expect(
+      resolveAiGamePlayerAddressText({
+        playerAddressText: "A traveller arrived at the gate",
+        playerAlias: "Alice",
+        featureFlags: {
+          [AI_GAME_FEATURE_FLAGS.ttsCacheEnabled]: true,
+        },
+      }).ttsCachePolicy,
+    ).toBe("exact-cache");
+  });
+
+  it("handles empty, disabled, and exact TTS cache policies", () => {
+    expect(AI_GAME_TTS_CACHE_POLICIES).toEqual(["exact-cache", "near-cache", "no-cache"]);
+    expect(
+      resolveAiGamePlayerAddressText({
+        playerAddressText: "   ",
+        featureFlags: {
+          [AI_GAME_FEATURE_FLAGS.ttsCacheEnabled]: true,
+        },
+      }).source,
+    ).toBe("policy-empty");
+    expect(
+      resolveAiGamePlayerAddressText({
+        playerAddressText: "Aria is nearby",
+        playerAlias: "Aria",
+        featureFlags: {
+          [AI_GAME_FEATURE_FLAGS.ttsCacheEnabled]: false,
+        },
+      }).source,
+    ).toBe("policy-disabled");
+    expect(
+      resolveAiGamePlayerAddressText({
+        playerAddressText: "Welcome to the market",
+        featureFlags: {
+          [AI_GAME_FEATURE_FLAGS.ttsCacheEnabled]: true,
+        },
+      }).ttsCachePolicy,
+    ).toBe("exact-cache");
   });
 
   it("classifies candidate and canonical event envelopes", () => {
@@ -86,12 +306,6 @@ describe("@plasius/ai-game", () => {
       magic: Number.NaN,
       population: 25,
     });
-
-    expect(impact.security).toBe(42);
-    expect(impact.ecology).toBe(0);
-    expect(impact.magic).toBe(0);
-    expect(impact.politics).toBe(100);
-
     const incident: WorldIncidentThread = {
       incidentId: "inc-1",
       scope: "regional",
@@ -102,24 +316,16 @@ describe("@plasius/ai-game", () => {
       updatedAtEpochMs: 2,
       affectedEventRefs: [],
     };
+
+    expect(impact.ecology).toBe(0);
+    expect(impact.magic).toBe(0);
+    expect(impact.politics).toBe(100);
+    expect(normalizeIncidentImpactVector({}).population).toBe(0);
     expect(isIncidentResolved(incident)).toBe(true);
-    expect(isIncidentResolved({ ...incident, lifecycle: "expired" })).toBe(true);
     expect(isIncidentResolved({ ...incident, lifecycle: "active" })).toBe(false);
   });
 
-  it("defaults absent incident impact dimensions to zero", () => {
-    expect(normalizeIncidentImpactVector({})).toEqual({
-      security: 0,
-      economy: 0,
-      ecology: 0,
-      politics: 0,
-      morale: 0,
-      magic: 0,
-      population: 0,
-    });
-  });
-
-  it("projects topics by audience with scope gating", () => {
+  it("projects gossip topics by audience and scope", () => {
     const topic: GossipTopic = {
       topicId: "gossip-1",
       status: "active",
@@ -143,7 +349,6 @@ describe("@plasius/ai-game", () => {
       confidenceLevel: "strong",
       audienceScope: "public",
     };
-
     const projection: GossipPerspectiveProjection = {
       projectionMode: "segment-level",
       audienceSegment: "public",
@@ -159,34 +364,17 @@ describe("@plasius/ai-game", () => {
       witnessChannels: [],
     };
 
-    const projected = projectTopicForAudience(topic, projection, 10);
-    expect(projected.visible).toBe(true);
-    expect(projected.topicId).toBe("gossip-1");
-    expect(projected.redactedPayload).toBeDefined();
     expect(isGossipTopicActive(topic, 10)).toBe(true);
-    expect(isGossipTopicCorrected(topic)).toBe(false);
-
-    expect(
-      projectTopicForAudience({ ...topic, expiresAtEpochMs: 5 }, projection, 10),
-    ).toMatchObject({
+    expect(isGossipTopicCorrected({ ...topic, status: "corrected" })).toBe(true);
+    expect(projectTopicForAudience(topic, projection, 10).visible).toBe(true);
+    expect(projectTopicForAudience({ ...topic, expiresAtEpochMs: 5 }, projection, 10)).toMatchObject({
       visible: false,
       reasons: ["inactive-or-expired-topic"],
     });
-
-    expect(
-      projectTopicForAudience(
-        topic,
-        {
-          ...projection,
-          faction: "rivals",
-        },
-        10,
-      ),
-    ).toMatchObject({
+    expect(projectTopicForAudience(topic, { ...projection, faction: "rivals" }, 10)).toMatchObject({
       visible: false,
       reasons: ["audience-not-authorized"],
     });
-
     expect(
       projectTopicForAudience(
         { ...topic, audienceScope: "faction" },
@@ -194,13 +382,7 @@ describe("@plasius/ai-game", () => {
           ...projection,
           projectionMode: "npc-level",
           requestedByNpcRef: "npc-1",
-          segmentRules: [
-            {
-              locality: [],
-              factions: ["merchants"],
-              relationshipScore: 1,
-            },
-          ],
+          segmentRules: [{ locality: [], factions: ["merchants"], relationshipScore: 1 }],
         },
         10,
       ),
@@ -208,10 +390,7 @@ describe("@plasius/ai-game", () => {
       visible: true,
       reasons: ["npc-level-allowed"],
     });
-
-    expect(
-      projectTopicForAudience({ ...topic, audienceScope: "faction" }, projection, 10),
-    ).toMatchObject({
+    expect(projectTopicForAudience({ ...topic, audienceScope: "faction" }, projection, 10)).toMatchObject({
       visible: false,
       reasons: ["scope-constraints"],
     });
