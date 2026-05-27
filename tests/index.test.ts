@@ -95,6 +95,30 @@ describe("@plasius/ai-game", () => {
     expect(deterministic.taskDecisions[0]?.authorityBoundary).toBe("deterministic");
   });
 
+  it("falls back to unknown for malformed task kinds from decoded inputs", () => {
+    const result = resolveAiGameTaskBatch({
+      actorRole: "player",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-forward-kind",
+          taskKind: "future-task-kind" as never,
+          taskText: "summon an npc action",
+        },
+      ],
+    });
+
+    expect(result.taskDecisions[0]).toMatchObject({
+      taskId: "task-forward-kind",
+      taskKind: "unknown",
+      authorityBoundary: "deterministic",
+      decision: "allow",
+    });
+    expect(result.allowedTaskIds).toEqual(["task-forward-kind"]);
+  });
+
   it("allows system-originated review-bound work and preserves empty batches", () => {
     const systemResult = resolveAiGameTaskBatch({
       actorRole: "system",

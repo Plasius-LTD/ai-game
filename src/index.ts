@@ -252,6 +252,16 @@ function isActorRole(role?: AiGameActorRole): AiGameActorRole {
   return role ?? "player";
 }
 
+function normalizeTaskKind(taskKind?: AiGameTaskKind): AiGameTaskKind | undefined {
+  if (!taskKind) {
+    return undefined;
+  }
+
+  return (AI_GAME_TASK_KINDS as readonly string[]).includes(taskKind)
+    ? taskKind
+    : "unknown";
+}
+
 export function classifyAiGameTask(taskText: string): AiGameTaskKind {
   const normalized = normalizeTaskText(taskText);
 
@@ -323,7 +333,7 @@ export function resolveAiGameTaskBatch(
   type ResolvedAiGameTaskRequest = AiGameTaskRequest & { taskKind: AiGameTaskKind };
   const requests: ResolvedAiGameTaskRequest[] = input.requests.map((request): ResolvedAiGameTaskRequest => ({
     ...request,
-    taskKind: request.taskKind ?? classifyAiGameTask(request.taskText),
+    taskKind: normalizeTaskKind(request.taskKind) ?? classifyAiGameTask(request.taskText),
   }));
 
   if (!featureEnabled) {
