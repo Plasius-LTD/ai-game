@@ -1,3 +1,12 @@
+export type Version = string;
+export type JsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue };
+
 export type GameWorldEventType =
   | "monster.spawned"
   | "monster.killed"
@@ -15,14 +24,6 @@ export type GameEventSubmissionChannel = "player" | "system" | "admin" | "simula
 export type GameEventActorKind = "player" | "npc" | "monster" | "system" | "faction" | "environment";
 export type GameEventParticipantRole = "causer" | "target" | "witness" | "owner" | "observer";
 export type GameEventSeverity = "info" | "warning" | "critical";
-export type GameWorldEventSchemaVersion = string;
-export type GameJsonValue =
-  | string
-  | number
-  | boolean
-  | null
-  | readonly GameJsonValue[]
-  | { readonly [key: string]: GameJsonValue };
 
 export interface GameEventActor {
   readonly kind: GameEventActorKind;
@@ -111,7 +112,7 @@ export interface SurplusUpdatedPayload extends GameWorldEventPayloadBase {
 export interface SystemCheckpointPayload extends GameWorldEventPayloadBase {
   readonly kind: "system.checkpoint";
   readonly sequence: string;
-  readonly checkpointState: GameJsonValue;
+  readonly checkpointState: JsonValue;
 }
 
 export type GameWorldEventPayload =
@@ -186,7 +187,7 @@ export interface ProjectionProjectorCheckpoint {
   readonly streamId: string;
   readonly lastAppliedEventOffset: number;
   readonly lastAppliedEventId: string;
-  readonly eventVersion: GameWorldEventSchemaVersion;
+  readonly eventVersion: Version;
   readonly updatedAtEpochMs: number;
 }
 
