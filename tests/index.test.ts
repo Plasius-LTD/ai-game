@@ -93,6 +93,36 @@ describe("@plasius/ai-game", () => {
 
     expect(deterministic.allowedTaskIds).toEqual(["task-dialogue"]);
     expect(deterministic.taskDecisions[0]?.authorityBoundary).toBe("deterministic");
+
+    const explicitKind = resolveAiGameTaskBatch({
+      actorRole: "player",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-explicit-dialogue",
+          taskKind: "npc-dialogue",
+          taskText: "summon the village guard",
+        },
+      ],
+    });
+    const reviewOnly = resolveAiGameTaskBatch({
+      actorRole: "player",
+      featureFlags: {
+        [AI_GAME_FEATURE_FLAGS.workloads]: true,
+      },
+      requests: [
+        {
+          taskId: "task-review-only",
+          taskText: "summon an npc action",
+        },
+      ],
+    });
+
+    expect(explicitKind.taskDecisions[0]?.taskKind).toBe("npc-dialogue");
+    expect(explicitKind.allowedTaskIds).toEqual(["task-explicit-dialogue"]);
+    expect(reviewOnly.audit.result).toBe("defer");
   });
 
   it("falls back to unknown for malformed task kinds from decoded inputs", () => {
@@ -188,6 +218,15 @@ describe("@plasius/ai-game", () => {
     expect(redacted.ttsCachePolicy).toBe("no-cache");
     expect(nearCache.ttsCachePolicy).toBe("near-cache");
     expect(nearCache.renderText).not.toContain("Alice");
+    expect(
+      resolveAiGamePlayerAddressText({
+        playerAddressText: "A traveller arrived at the gate",
+        playerAlias: "Alice",
+        featureFlags: {
+          [AI_GAME_FEATURE_FLAGS.ttsCacheEnabled]: true,
+        },
+      }).ttsCachePolicy,
+    ).toBe("exact-cache");
   });
 
   it("handles empty, disabled, and exact TTS cache policies", () => {
