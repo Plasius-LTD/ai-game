@@ -151,4 +151,131 @@ describe("@plasius/ai-game", () => {
     expect(isGossipTopicActive(topic, 10)).toBe(true);
     expect(isGossipTopicCorrected(topic)).toBe(false);
   });
+
+  it("clamps invalid and out-of-range incident impact values", () => {
+    const impact = normalizeIncidentImpactVector({
+      security: -12,
+      economy: 110,
+      ecology: Number.NaN,
+      politics: 55,
+      morale: 0,
+      magic: -5,
+      population: 200,
+    });
+
+    expect(impact.security).toBe(0);
+    expect(impact.economy).toBe(100);
+    expect(impact.ecology).toBe(0);
+    expect(impact.magic).toBe(0);
+    expect(impact.population).toBe(100);
+  });
+
+  it("flags gossip topics that cannot surface to audience", () => {
+    const topic: GossipTopic = {
+      topicId: "gossip-2",
+      status: "active",
+      emittedAtEpochMs: 1,
+      expiresAtEpochMs: 5,
+      sourceLink: { sourceType: "event", sourceId: "evt-2" },
+      sourceEventRef: "evt-2",
+      payload: {
+        factSummary: "A quiet tale.",
+        certainty: 0.8,
+        salience: "medium",
+        evidenceRefs: [{ sourceType: "event", sourceId: "evt-2" }],
+        speechHint: {
+          sentenceTone: "urgent",
+          localizedHintKey: "gossip.tale",
+        },
+      },
+      confidenceLevel: "uncertain",
+      audienceScope: "public",
+    };
+
+    expect(isGossipTopicActive(topic, 10)).toBe(false);
+    const projectedInactive = projectTopicForAudience(topic, {
+      projectionMode: "segment-level",
+      audienceSegment: "north",
+      locality: "north",
+      faction: "knights",
+      segmentRules: [
+        {
+          locality: ["north"],
+          factions: ["knights"],
+          relationshipScore: 2,
+        },
+      ],
+      witnessChannels: [],
+    }, 10);
+    expect(projectedInactive.visible).toBe(false);
+    expect(projectedInactive.reasons).toContain("inactive-or-expired-topic");
+
+    const projectedUnauthorized = projectTopicForAudience(
+      {
+        ...topic,
+        expiresAtEpochMs: 20_000,
+        status: "active",
+      },
+      {
+      projectionMode: "segment-level",
+      audienceSegment: "desert",
+      locality: "south",
+      faction: "mages",
+      segmentRules: [
+        {
+          locality: ["north"],
+          factions: ["knights"],
+          relationshipScore: 2,
+        },
+      ],
+      witnessChannels: [],
+      },
+      1_000_000,
+    );
+    expect(projectedUnauthorized.visible).toBe(false);
+    expect(projectedUnauthorized.reasons).toContain("audience-not-authorized");
+  });
+
+  it("supports corrected gossip and npc-level projection gates", () => {
+    const topic: GossipTopic = {
+      topicId: "gossip-3",
+      status: "active",
+      emittedAtEpochMs: 1,
+      expiresAtEpochMs: 10_000,
+      sourceLink: { sourceType: "incident", sourceId: "inc-2" },
+      sourceEventRef: "inc-2",
+      payload: {
+        factSummary: "Evidence points elsewhere.",
+        certainty: 0.9,
+        salience: "critical",
+        evidenceRefs: [{ sourceType: "incident", sourceId: "inc-2" }],
+        speechHint: {
+          sentenceTone: "formal",
+          localizedHintKey: "gossip.correction",
+        },
+      },
+      confidenceLevel: "verified",
+      audienceScope: "public",
+    };
+    expect(isGossipTopicCorrected(topic)).toBe(false);
+
+    const projection: GossipPerspectiveProjection = {
+      projectionMode: "npc-level",
+      audienceSegment: "player",
+      locality: "north",
+      faction: "merchants",
+      segmentRules: [
+        {
+          locality: ["north"],
+          factions: ["merchants"],
+          relationshipScore: 4,
+        },
+      ],
+      witnessChannels: [],
+      requestedByNpcRef: "",
+    };
+    const projected = projectTopicForAudience(topic, projection, 5_000);
+    expect(projected.visible).toBe(false);
+    expect(projected.reasons).toContain("scope-constraints");
+  });
 });
