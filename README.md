@@ -20,6 +20,11 @@ import { packageDescriptor } from "@plasius/ai-game";
 console.log(packageDescriptor.packageName);
 ```
 
+## Architecture
+
+- Design docs: [docs/design](./docs/design)
+- ADRs: [docs/adrs](./docs/adrs)
+
 ## Development
 
 ```bash
@@ -34,6 +39,7 @@ npm run pack:check
 
 - Security policy: [SECURITY.md](./SECURITY.md)
 - Code of conduct: [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- Design docs: [docs/design](./docs/design)
 - ADRs: [docs/adrs](./docs/adrs)
 - CLA and legal docs: [legal](./legal)
 

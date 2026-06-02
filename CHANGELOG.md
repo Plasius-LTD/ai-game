@@ -7,3 +7,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 - Added initial public package scaffold with governance, legal, docs, build, test, and pack-check baselines.
+- Added Event Recorder and NPC Gossip high-level design documents plus ADRs for event contracts, ingestion, impact, and gossip lifecycle planning.
