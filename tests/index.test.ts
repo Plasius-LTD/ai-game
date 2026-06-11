@@ -10,17 +10,30 @@ import {
   AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID,
   AI_GAME_INCIDENT_IMPACT_FEATURE_FLAG_ID,
   AI_GAME_PACKAGE,
+  AI_GAME_PLAYER_EVOLUTION_STAGES,
   AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
+  AI_GAME_POINTS_AUTHORITY_BANDS,
+  AI_GAME_POINTS_LEDGER_IDS,
+  AI_GAME_POINTS_STORE_FEATURE_FLAG_ID,
   AI_GAME_TTS_CACHE_POLICIES,
+  aiGameFeatureFlags,
   classifyAiGameTask,
+  createAiGamePointsLedgerSnapshot,
+  evaluateAiGameProtoSocialDevolutionEligibility,
+  getAiGameProtoSocialDevolutionPolicy,
+  getDefaultAiGamePointsSpendPolicies,
+  gameEventFeatureFlags,
   isCanonicalWorldEvent,
   isCandidateWorldEvent,
   isGossipTopicActive,
   isGossipTopicCorrected,
   isIncidentResolved,
+  isAiGamePlayerEvolutionStage,
+  isAiGamePointsLedgerId,
   normalizeIncidentImpactVector,
   packageDescriptor,
   projectTopicForAudience,
+  resolveAiGamePointsAuthorityBoundary,
   resolveAiGamePlayerAddressText,
   resolveAiGameTaskBatch,
   type GossipPerspectiveProjection,
@@ -41,6 +54,94 @@ describe("@plasius/ai-game", () => {
     expect(AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.topics.enabled");
     expect(AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.perspective.enabled");
     expect(AI_GAME_GOSSIP_LIFECYCLE_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.lifecycle.enabled");
+    expect(AI_GAME_POINTS_STORE_FEATURE_FLAG_ID).toBe("isekai.player-system.points-store.enabled");
+    expect(aiGameFeatureFlags.pointsStore).toBe(AI_GAME_POINTS_STORE_FEATURE_FLAG_ID);
+    expect(gameEventFeatureFlags).toContain(AI_GAME_POINTS_STORE_FEATURE_FLAG_ID);
+  });
+
+  it("exports points-store ledger, spend-policy, and authority-boundary contracts", () => {
+    expect(AI_GAME_POINTS_LEDGER_IDS).toEqual(["pp", "esp", "tis", "dis"]);
+    expect(AI_GAME_POINTS_AUTHORITY_BANDS).toEqual(["self", "frontier", "civic", "divine"]);
+    expect(AI_GAME_PLAYER_EVOLUTION_STAGES).toEqual(["proto-social", "social-lock"]);
+    expect(isAiGamePointsLedgerId("esp")).toBe(true);
+    expect(isAiGamePointsLedgerId("unknown")).toBe(false);
+    expect(isAiGamePlayerEvolutionStage("proto-social")).toBe(true);
+    expect(isAiGamePlayerEvolutionStage("social-lock")).toBe(true);
+    expect(isAiGamePlayerEvolutionStage("unknown")).toBe(false);
+    expect(resolveAiGamePointsAuthorityBoundary("pp")).toMatchObject({
+      ledgerId: "pp",
+      authorityBand: "self",
+      authoritySystem: "player-system",
+      requiresWorldAuthority: false,
+    });
+    expect(resolveAiGamePointsAuthorityBoundary("dis")).toMatchObject({
+      ledgerId: "dis",
+      authorityBand: "divine",
+      authoritySystem: "divine-influence-system",
+      requiresWorldAuthority: true,
+    });
+    expect(
+      getDefaultAiGamePointsSpendPolicies().map((policy) => policy.ledgerId),
+    ).toEqual(["pp", "esp", "tis", "dis"]);
+    expect(
+      getDefaultAiGamePointsSpendPolicies().find((policy) => policy.ledgerId === "esp")
+        ?.authorityBoundary,
+    ).toMatchObject({
+      authorityBand: "frontier",
+      combatSafeOnly: true,
+    });
+    expect(
+      createAiGamePointsLedgerSnapshot({
+        ledgerId: "esp",
+        balance: 11.9,
+        earnedTotal: 14,
+        spentTotal: -1,
+        committedTotal: Number.NaN,
+      }),
+    ).toMatchObject({
+      ledgerId: "esp",
+      balance: 11,
+      earnedTotal: 14,
+      spentTotal: 0,
+      committedTotal: 0,
+    });
+  });
+
+  it("evaluates proto-social devolution eligibility deterministically", () => {
+    const policy = getAiGameProtoSocialDevolutionPolicy();
+    const available = evaluateAiGameProtoSocialDevolutionEligibility({
+      evolutionStage: "proto-social",
+      currentBalance: policy.cost,
+      alreadyUsed: false,
+    });
+    const locked = evaluateAiGameProtoSocialDevolutionEligibility({
+      evolutionStage: "social-lock",
+      currentBalance: policy.cost + 5,
+      alreadyUsed: false,
+    });
+    const exhausted = evaluateAiGameProtoSocialDevolutionEligibility({
+      evolutionStage: "proto-social",
+      currentBalance: policy.cost - 1,
+      alreadyUsed: true,
+    });
+
+    expect(policy).toMatchObject({
+      actionId: "return-to-slime",
+      ledgerId: "pp",
+      requiredEvolutionStage: "proto-social",
+      closesAtEvolutionStage: "social-lock",
+      singleUse: true,
+    });
+    expect(available).toEqual({
+      available: true,
+      reasonCodes: ["devolution-allowed"],
+      policy,
+    });
+    expect(locked.available).toBe(false);
+    expect(locked.reasonCodes).toContain("devolution-window-closed");
+    expect(exhausted.available).toBe(false);
+    expect(exhausted.reasonCodes).toContain("devolution-already-used");
+    expect(exhausted.reasonCodes).toContain("insufficient-pp-balance");
   });
 
   it("classifies supported game task intents", () => {

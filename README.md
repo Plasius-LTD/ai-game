@@ -1,10 +1,10 @@
 # @plasius/ai-game
 
-Game-domain AI contracts for player action validation, NPC actions, gossip, and feedback.
+Game-domain AI contracts for player action validation, NPC actions, gossip, feedback, and points-store authority seams.
 
 ## Scope
 
-This package is part of the layered `@plasius/ai-*` package family. It exports canonical public contracts for world events, world-event ingestion, incident impact state, and gossip topic projection.
+This package is part of the layered `@plasius/ai-*` package family. It exports canonical public contracts for world events, world-event ingestion, incident impact state, gossip topic projection, and Player System points-store ledgers and spend policies.
 
 ## Install
 
@@ -18,13 +18,17 @@ npm install @plasius/ai-game
 import {
   AI_GAME_PACKAGE,
   AI_GAME_FEATURE_FLAG_ID,
+  AI_GAME_POINTS_STORE_FEATURE_FLAG_ID,
   aiGameFeatureFlags,
+  getAiGameProtoSocialDevolutionPolicy,
+  getDefaultAiGamePointsSpendPolicies,
   packageDescriptor,
   type GameWorldEvent,
   type WorldEventIngestionPort,
   type WorldIncidentThread,
   type GossipTopic,
-  type GossipPerspectiveProjection
+  type GossipPerspectiveProjection,
+  type AiGamePointsLedgerSnapshot
 } from "@plasius/ai-game";
 ```
 
@@ -46,6 +50,14 @@ npm run pack:check
 - `ai.game.npc-gossip.topics.enabled`
 - `ai.game.npc-gossip.perspective.enabled`
 - `ai.game.npc-gossip.lifecycle.enabled`
+- `isekai.player-system.points-store.enabled`
+
+## Points Store contracts
+
+- `AI_GAME_POINTS_LEDGER_IDS` exports the canonical `PP`, `ESP`, `TIS`, and `DIS` ledger IDs as `pp`, `esp`, `tis`, and `dis`.
+- `resolveAiGamePointsAuthorityBoundary()` maps each ledger to its public authority band and owning external system.
+- `getDefaultAiGamePointsSpendPolicies()` describes the documented spend-policy surface for each ledger.
+- `getAiGameProtoSocialDevolutionPolicy()` and `evaluateAiGameProtoSocialDevolutionEligibility()` define the one-time proto-social PP devolution window and its closure after social-form lock.
 
 ## Governance
 

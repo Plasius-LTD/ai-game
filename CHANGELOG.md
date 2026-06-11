@@ -12,9 +12,10 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
   - Added incident lifecycle, resolution link, and impact vector models.
   - Added structured gossip topic contracts with lifecycle, confidence, and perspective projection projections.
   - Documented the public `@plasius/ai-game` contract boundary for Quiet Measure hidden-character inference, mission probes, and Judgment verdict models while keeping raw runtime scores host-private by default.
+  - Added Player System Points Store ledger, spend-policy, authority-boundary, and proto-social devolution contracts for `PP`, `ESP`, `TIS`, and `DIS`.
 
 - **Changed**
-  - Extended public package surface to include all world-event and gossip contract families needed by `ai-game` ingestion and projection consumers.
+  - Extended public package surface to include all world-event, gossip, and points-store contract families needed by `ai-game` and Player System consumers.
 
 - **Fixed**
   - (placeholder)
