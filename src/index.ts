@@ -621,6 +621,16 @@ export const gameEventFeatureFlags = Object.freeze([
 ]);
 
 export {
+  createAiGamePointsLedgerSnapshot,
+  evaluateAiGameProtoSocialDevolutionEligibility,
+  getAiGameProtoSocialDevolutionPolicy,
+  getDefaultAiGamePointsSpendPolicies,
+  isAiGamePlayerEvolutionStage,
+  isAiGamePointsLedgerId,
+  resolveAiGamePointsAuthorityBoundary,
+} from "./points-store.js";
+
+export {
   isCanonicalWorldEvent,
   isCandidateWorldEvent,
   isIncidentResolved,
@@ -633,5 +643,6 @@ export {
   projectTopicForAudience,
 } from "./gossip.js";
 
+export * from "./points-store.js";
 export * from "./world-events.js";
 export * from "./gossip.js";
