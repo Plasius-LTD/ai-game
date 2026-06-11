@@ -26,6 +26,7 @@ import {
   isGossipTopicActive,
   isGossipTopicCorrected,
   isIncidentResolved,
+  isAiGamePlayerEvolutionStage,
   isAiGamePointsLedgerId,
   normalizeIncidentImpactVector,
   packageDescriptor,
@@ -60,6 +61,9 @@ describe("@plasius/ai-game", () => {
     expect(AI_GAME_PLAYER_EVOLUTION_STAGES).toEqual(["proto-social", "social-lock"]);
     expect(isAiGamePointsLedgerId("esp")).toBe(true);
     expect(isAiGamePointsLedgerId("unknown")).toBe(false);
+    expect(isAiGamePlayerEvolutionStage("proto-social")).toBe(true);
+    expect(isAiGamePlayerEvolutionStage("social-lock")).toBe(true);
+    expect(isAiGamePlayerEvolutionStage("unknown")).toBe(false);
     expect(resolveAiGamePointsAuthorityBoundary("pp")).toMatchObject({
       ledgerId: "pp",
       authorityBand: "self",
