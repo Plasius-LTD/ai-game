@@ -16,11 +16,13 @@ import {
   AI_GAME_POINTS_LEDGER_IDS,
   AI_GAME_POINTS_STORE_FEATURE_FLAG_ID,
   AI_GAME_TTS_CACHE_POLICIES,
+  aiGameFeatureFlags,
   classifyAiGameTask,
   createAiGamePointsLedgerSnapshot,
   evaluateAiGameProtoSocialDevolutionEligibility,
   getAiGameProtoSocialDevolutionPolicy,
   getDefaultAiGamePointsSpendPolicies,
+  gameEventFeatureFlags,
   isCanonicalWorldEvent,
   isCandidateWorldEvent,
   isGossipTopicActive,
@@ -53,6 +55,8 @@ describe("@plasius/ai-game", () => {
     expect(AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.perspective.enabled");
     expect(AI_GAME_GOSSIP_LIFECYCLE_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.lifecycle.enabled");
     expect(AI_GAME_POINTS_STORE_FEATURE_FLAG_ID).toBe("isekai.player-system.points-store.enabled");
+    expect(aiGameFeatureFlags.pointsStore).toBe(AI_GAME_POINTS_STORE_FEATURE_FLAG_ID);
+    expect(gameEventFeatureFlags).toContain(AI_GAME_POINTS_STORE_FEATURE_FLAG_ID);
   });
 
   it("exports points-store ledger, spend-policy, and authority-boundary contracts", () => {
