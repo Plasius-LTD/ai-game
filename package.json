@@ -1,6 +1,6 @@
 {
   "name": "@plasius/ai-game",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Game-domain AI contracts for player action validation, NPC actions, gossip, and feedback.",
   "type": "module",
   "sideEffects": false,
