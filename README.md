@@ -46,7 +46,7 @@ npm run pack:check
 
 Protected `main` releases use a two-step flow:
 
-1. Run `.github/workflows/cd.yml` with `bump=patch|minor|major` to open a `release/vX.Y.Z` prep PR from `main`.
+1. Run `.github/workflows/cd.yml` with `bump=patch|minor|major` to push a `release/vX.Y.Z` prep branch and, when repository settings allow it, open the matching PR from `main`.
 2. Merge that PR to `main` so the push-triggered publish job can tag the release, publish to npm, and publish the GitHub release.
 
 ## Feature flags

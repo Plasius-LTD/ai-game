@@ -30,6 +30,8 @@ Release preparation must derive its base version from the highest known semantic
 
 The workflow will then apply the requested bump on top of that reconciled base so lagging `package.json` values cannot reuse or collide with an already-published release number.
 
+When repository settings prevent GitHub Actions from creating pull requests, the workflow will still push the release-preparation branch and emit the manual PR URL instead of failing the run.
+
 ## Consequences
 
 - Release metadata now flows through an approved pull-request path instead of an unauthorized direct push to protected `main`.
