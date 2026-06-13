@@ -16,6 +16,7 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 
 - **Changed**
   - Extended public package surface to include all world-event, gossip, and points-store contract families needed by `ai-game` and Player System consumers.
+  - Moved npm publication to a protected-main-safe release-prep PR workflow with reconciled package, tag, and npm version state.
 
 - **Fixed**
   - (placeholder)
