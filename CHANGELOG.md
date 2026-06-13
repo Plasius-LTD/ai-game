@@ -20,6 +20,7 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 
 - **Fixed**
   - Preserved release-branch version and changelog edits so protected-main publish runs can complete from prepared metadata on `main`.
+  - Detected unpublished prepared releases from `main` metadata instead of merge-commit titles so merged release PRs actually publish.
 
 - **Security**
   - (placeholder)
