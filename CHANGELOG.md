@@ -19,7 +19,7 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
   - Moved npm publication to a protected-main-safe release-prep PR workflow with reconciled package, tag, and npm version state.
 
 - **Fixed**
-  - (placeholder)
+  - Preserved release-branch version and changelog edits so protected-main publish runs can complete from prepared metadata on `main`.
 
 - **Security**
   - (placeholder)
