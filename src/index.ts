@@ -1,5 +1,3 @@
-import { AI_GAME_POINTS_STORE_FEATURE_FLAG_ID } from "./points-store.js";
-
 export interface AiPackageDescriptor {
   readonly packageName: string;
   readonly featureFlagId: string;
@@ -611,7 +609,6 @@ export const aiGameFeatureFlags = Object.freeze({
   gossipTopics: AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID,
   gossipPerspective: AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
   gossipLifecycle: AI_GAME_GOSSIP_LIFECYCLE_FEATURE_FLAG_ID,
-  pointsStore: AI_GAME_POINTS_STORE_FEATURE_FLAG_ID,
 });
 
 export const gameEventFeatureFlags = Object.freeze([
@@ -621,18 +618,7 @@ export const gameEventFeatureFlags = Object.freeze([
   aiGameFeatureFlags.gossipTopics,
   aiGameFeatureFlags.gossipPerspective,
   aiGameFeatureFlags.gossipLifecycle,
-  aiGameFeatureFlags.pointsStore,
 ]);
-
-export {
-  createAiGamePointsLedgerSnapshot,
-  evaluateAiGameProtoSocialDevolutionEligibility,
-  getAiGameProtoSocialDevolutionPolicy,
-  getDefaultAiGamePointsSpendPolicies,
-  isAiGamePlayerEvolutionStage,
-  isAiGamePointsLedgerId,
-  resolveAiGamePointsAuthorityBoundary,
-} from "./points-store.js";
 
 export {
   isCanonicalWorldEvent,
@@ -647,6 +633,16 @@ export {
   projectTopicForAudience,
 } from "./gossip.js";
 
-export * from "./points-store.js";
+export {
+  AI_GAME_QUIET_MEASURE_FEATURE_FLAG_ID,
+  createQuietMeasureJudgmentEligibility,
+  createQuietMeasureJudgmentResponse,
+  isQuietMeasureAxis,
+  isQuietMeasureMissionProbeMode,
+  isQuietMeasureMissionResolutionShape,
+  listQuietMeasureMissingEvidence,
+} from "./quiet-measure.js";
+
 export * from "./world-events.js";
 export * from "./gossip.js";
+export * from "./quiet-measure.js";

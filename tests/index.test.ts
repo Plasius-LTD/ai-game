@@ -10,30 +10,28 @@ import {
   AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID,
   AI_GAME_INCIDENT_IMPACT_FEATURE_FLAG_ID,
   AI_GAME_PACKAGE,
-  AI_GAME_PLAYER_EVOLUTION_STAGES,
   AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
-  AI_GAME_POINTS_AUTHORITY_BANDS,
-  AI_GAME_POINTS_LEDGER_IDS,
-  AI_GAME_POINTS_STORE_FEATURE_FLAG_ID,
+  AI_GAME_QUIET_MEASURE_FEATURE_FLAG_ID,
+  QUIET_MEASURE_AXES,
+  QUIET_MEASURE_DERIVED_READS,
+  QUIET_MEASURE_MISSION_PROBE_MODES,
+  QUIET_MEASURE_MISSION_RESOLUTION_SHAPES,
   AI_GAME_TTS_CACHE_POLICIES,
-  aiGameFeatureFlags,
   classifyAiGameTask,
-  createAiGamePointsLedgerSnapshot,
-  evaluateAiGameProtoSocialDevolutionEligibility,
-  getAiGameProtoSocialDevolutionPolicy,
-  getDefaultAiGamePointsSpendPolicies,
-  gameEventFeatureFlags,
+  createQuietMeasureJudgmentEligibility,
+  createQuietMeasureJudgmentResponse,
   isCanonicalWorldEvent,
   isCandidateWorldEvent,
   isGossipTopicActive,
+  isQuietMeasureAxis,
+  isQuietMeasureMissionProbeMode,
+  isQuietMeasureMissionResolutionShape,
   isGossipTopicCorrected,
   isIncidentResolved,
-  isAiGamePlayerEvolutionStage,
-  isAiGamePointsLedgerId,
+  listQuietMeasureMissingEvidence,
   normalizeIncidentImpactVector,
   packageDescriptor,
   projectTopicForAudience,
-  resolveAiGamePointsAuthorityBoundary,
   resolveAiGamePlayerAddressText,
   resolveAiGameTaskBatch,
   type GossipPerspectiveProjection,
@@ -54,94 +52,507 @@ describe("@plasius/ai-game", () => {
     expect(AI_GAME_GOSSIP_TOPICS_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.topics.enabled");
     expect(AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.perspective.enabled");
     expect(AI_GAME_GOSSIP_LIFECYCLE_FEATURE_FLAG_ID).toBe("ai.game.npc-gossip.lifecycle.enabled");
-    expect(AI_GAME_POINTS_STORE_FEATURE_FLAG_ID).toBe("isekai.player-system.points-store.enabled");
-    expect(aiGameFeatureFlags.pointsStore).toBe(AI_GAME_POINTS_STORE_FEATURE_FLAG_ID);
-    expect(gameEventFeatureFlags).toContain(AI_GAME_POINTS_STORE_FEATURE_FLAG_ID);
+    expect(AI_GAME_QUIET_MEASURE_FEATURE_FLAG_ID).toBe(
+      "isekai.player-system.quiet-measure.enabled",
+    );
   });
 
-  it("exports points-store ledger, spend-policy, and authority-boundary contracts", () => {
-    expect(AI_GAME_POINTS_LEDGER_IDS).toEqual(["pp", "esp", "tis", "dis"]);
-    expect(AI_GAME_POINTS_AUTHORITY_BANDS).toEqual(["self", "frontier", "civic", "divine"]);
-    expect(AI_GAME_PLAYER_EVOLUTION_STAGES).toEqual(["proto-social", "social-lock"]);
-    expect(isAiGamePointsLedgerId("esp")).toBe(true);
-    expect(isAiGamePointsLedgerId("unknown")).toBe(false);
-    expect(isAiGamePlayerEvolutionStage("proto-social")).toBe(true);
-    expect(isAiGamePlayerEvolutionStage("social-lock")).toBe(true);
-    expect(isAiGamePlayerEvolutionStage("unknown")).toBe(false);
-    expect(resolveAiGamePointsAuthorityBoundary("pp")).toMatchObject({
-      ledgerId: "pp",
-      authorityBand: "self",
-      authoritySystem: "player-system",
-      requiresWorldAuthority: false,
+  it("exports Quiet Measure axes, probe metadata, and eligibility helpers", () => {
+    expect(QUIET_MEASURE_AXES).toEqual([
+      "selflessness",
+      "give",
+      "mercy",
+      "duty",
+      "principle",
+      "courtesy",
+    ]);
+    expect(QUIET_MEASURE_DERIVED_READS).toEqual([
+      "nature",
+      "mask",
+      "veil-gap",
+      "restitution",
+    ]);
+    expect(QUIET_MEASURE_MISSION_PROBE_MODES).toEqual([
+      "clarify",
+      "tempt",
+      "reinforce",
+    ]);
+    expect(QUIET_MEASURE_MISSION_RESOLUTION_SHAPES).toEqual([
+      "restorative",
+      "dominant",
+      "detached",
+      "performative",
+    ]);
+
+    expect(isQuietMeasureAxis("mercy")).toBe(true);
+    expect(isQuietMeasureAxis("alignment")).toBe(false);
+    expect(isQuietMeasureMissionProbeMode("tempt")).toBe(true);
+    expect(isQuietMeasureMissionProbeMode("reward")).toBe(false);
+    expect(isQuietMeasureMissionResolutionShape("restorative")).toBe(true);
+    expect(isQuietMeasureMissionResolutionShape("punitive")).toBe(false);
+
+    const eligibility = createQuietMeasureJudgmentEligibility({
+      repeatedMeaningfulEvidence: true,
+      includesPrivateOrLowWitnessEvidence: false,
+      includesCostlyPressureEvent: false,
+      reasonCodes: ["awaiting-pattern"],
     });
-    expect(resolveAiGamePointsAuthorityBoundary("dis")).toMatchObject({
-      ledgerId: "dis",
-      authorityBand: "divine",
-      authoritySystem: "divine-influence-system",
-      requiresWorldAuthority: true,
+
+    expect(eligibility.eligible).toBe(false);
+    expect(listQuietMeasureMissingEvidence(eligibility)).toEqual([
+      "private-or-low-witness-evidence",
+      "costly-pressure-event",
+    ]);
+  });
+
+  it("creates insufficient-evidence and verdict Judgment responses without exposing raw scores", () => {
+    const insufficientRequest = {
+      subjectId: "player-1",
+      requestedAtUtc: "2026-06-04T11:00:00.000Z",
+      requestedBy: "player",
+      disclosure: "title-and-verdict-only",
+    } as const;
+    const insufficientEligibility = createQuietMeasureJudgmentEligibility({
+      repeatedMeaningfulEvidence: true,
+      includesPrivateOrLowWitnessEvidence: false,
+      includesCostlyPressureEvent: false,
     });
-    expect(
-      getDefaultAiGamePointsSpendPolicies().map((policy) => policy.ledgerId),
-    ).toEqual(["pp", "esp", "tis", "dis"]);
-    expect(
-      getDefaultAiGamePointsSpendPolicies().find((policy) => policy.ledgerId === "esp")
-        ?.authorityBoundary,
-    ).toMatchObject({
-      authorityBand: "frontier",
-      combatSafeOnly: true,
+    const insufficient = createQuietMeasureJudgmentResponse({
+      request: insufficientRequest,
+      eligibility: insufficientEligibility,
+      reasonCodes: ["insufficient-signal"],
     });
-    expect(
-      createAiGamePointsLedgerSnapshot({
-        ledgerId: "esp",
-        balance: 11.9,
-        earnedTotal: 14,
-        spentTotal: -1,
-        committedTotal: Number.NaN,
+
+    expect(insufficient.kind).toBe("insufficient-evidence");
+    expect(insufficient.missingEvidence).toEqual([
+      "private-or-low-witness-evidence",
+      "costly-pressure-event",
+    ]);
+
+    const verdictRequest = {
+      subjectId: "player-1",
+      requestedAtUtc: "2026-06-04T11:05:00.000Z",
+      requestedBy: "player",
+      disclosure: "title-and-verdict-only",
+    } as const;
+    const verdictEligibility = createQuietMeasureJudgmentEligibility({
+      repeatedMeaningfulEvidence: true,
+      includesPrivateOrLowWitnessEvidence: true,
+      includesCostlyPressureEvent: true,
+      reasonCodes: ["earned-judgment"],
+    });
+    const verdict = createQuietMeasureJudgmentResponse({
+      request: verdictRequest,
+      eligibility: verdictEligibility,
+      title: {
+        titleId: "restorative-warden",
+        title: "Restorative Warden",
+        verdictLabel: "Mercy outweighed appetite for domination.",
+        perspective: "system-truth",
+        disclosure: "title-and-verdict-only",
+        reasonCodes: ["verdict-restorative"],
+      },
+      dominantReads: [
+        {
+          read: "nature",
+          perspective: "system-truth",
+          signalBand: "present",
+          confidenceBand: "high",
+          reasonCodes: ["pattern-settled"],
+        },
+        {
+          read: "restitution",
+          perspective: "system-truth",
+          signalBand: "dominant",
+          confidenceBand: "high",
+          reasonCodes: ["repair-after-harm"],
+        },
+      ],
+      reasonCodes: ["verdict-ready"],
+    });
+
+    expect(verdict.kind).toBe("verdict");
+    expect(verdict.title.title).toBe("Restorative Warden");
+    expect(verdict.dominantReads).toHaveLength(2);
+    expect("score" in verdict).toBe(false);
+  });
+
+  it("defaults reason codes when quiet-measure reason list is omitted", () => {
+    const request = {
+      subjectId: "player-2",
+      requestedAtUtc: "2026-06-04T12:30:00.000Z",
+      requestedBy: "player",
+      disclosure: "title-and-verdict-only" as const,
+    };
+    const eligibility = createQuietMeasureJudgmentEligibility({
+      repeatedMeaningfulEvidence: false,
+      includesPrivateOrLowWitnessEvidence: true,
+      includesCostlyPressureEvent: true,
+    });
+    const response = createQuietMeasureJudgmentResponse({
+      request,
+      eligibility,
+    });
+
+    expect(response.kind).toBe("insufficient-evidence");
+    expect(response.reasonCodes).toEqual([]);
+  });
+
+  it("defaults dominant reads to empty list when not provided", () => {
+    const request = {
+      subjectId: "player-3",
+      requestedAtUtc: "2026-06-04T12:40:00.000Z",
+      requestedBy: "operator" as const,
+      disclosure: "title-and-verdict-only" as const,
+    };
+    const eligibility = createQuietMeasureJudgmentEligibility({
+      repeatedMeaningfulEvidence: true,
+      includesPrivateOrLowWitnessEvidence: true,
+      includesCostlyPressureEvent: true,
+    });
+    const response = createQuietMeasureJudgmentResponse({
+      request,
+      eligibility,
+      title: {
+        titleId: "dominant-empty",
+        title: "The Quiet Auditor",
+        verdictLabel: "Measured restraint observed.",
+        perspective: "system-truth",
+        disclosure: "title-and-verdict-only",
+        reasonCodes: ["verdict-ready"],
+      },
+    });
+
+    expect(response.kind).toBe("verdict");
+    expect(response.dominantReads).toEqual([]);
+    expect(response.reasonCodes).toEqual([]);
+  });
+
+  it("deduplicates quiet-measure reason codes and defaults eligibility inputs", () => {
+    const eligibility = createQuietMeasureJudgmentEligibility({
+      reasonCodes: ["signal-noise", "signal-noise", "quiet-cadence"],
+    });
+    const request = {
+      subjectId: "player-1",
+      requestedAtUtc: "2026-06-04T12:00:00.000Z",
+      requestedBy: "system" as const,
+      disclosure: "title-and-verdict-only" as const,
+    };
+
+    expect(createQuietMeasureJudgmentResponse({
+      request,
+      eligibility,
+      reasonCodes: ["signal-noise", "signal-noise", "quiet-cadence"],
+    })).toMatchObject({
+      kind: "insufficient-evidence",
+      missingEvidence: [
+        "repeated-meaningful-evidence",
+        "private-or-low-witness-evidence",
+        "costly-pressure-event",
+      ],
+      reasonCodes: ["signal-noise", "quiet-cadence"],
+    });
+
+    expect(eligibility.reasonCodes).toEqual(["signal-noise", "quiet-cadence"]);
+  });
+
+  it("derives verdict eligibility from evidence booleans", () => {
+    const request = {
+      subjectId: "player-2",
+      requestedAtUtc: "2026-06-04T13:00:00.000Z",
+      requestedBy: "system" as const,
+      disclosure: "title-and-verdict-only" as const,
+    };
+
+    const tamperedEligibility = {
+      ...createQuietMeasureJudgmentEligibility({
+        repeatedMeaningfulEvidence: true,
+        includesPrivateOrLowWitnessEvidence: false,
+        includesCostlyPressureEvent: false,
       }),
-    ).toMatchObject({
-      ledgerId: "esp",
-      balance: 11,
-      earnedTotal: 14,
-      spentTotal: 0,
-      committedTotal: 0,
+      eligible: true,
+    };
+
+    const verdict = createQuietMeasureJudgmentResponse({
+      request,
+      eligibility: tamperedEligibility,
     });
+
+    expect(verdict.kind).toBe("insufficient-evidence");
+    expect(verdict.eligibility.eligible).toBe(false);
+    expect(verdict.missingEvidence).toEqual([
+      "private-or-low-witness-evidence",
+      "costly-pressure-event",
+    ]);
   });
 
-  it("evaluates proto-social devolution eligibility deterministically", () => {
-    const policy = getAiGameProtoSocialDevolutionPolicy();
-    const available = evaluateAiGameProtoSocialDevolutionEligibility({
-      evolutionStage: "proto-social",
-      currentBalance: policy.cost,
-      alreadyUsed: false,
+  it("validates quiet-measure title input when eligibility is met", () => {
+    const eligible = createQuietMeasureJudgmentEligibility({
+      repeatedMeaningfulEvidence: true,
+      includesPrivateOrLowWitnessEvidence: true,
+      includesCostlyPressureEvent: true,
     });
-    const locked = evaluateAiGameProtoSocialDevolutionEligibility({
-      evolutionStage: "social-lock",
-      currentBalance: policy.cost + 5,
-      alreadyUsed: false,
-    });
-    const exhausted = evaluateAiGameProtoSocialDevolutionEligibility({
-      evolutionStage: "proto-social",
-      currentBalance: policy.cost - 1,
-      alreadyUsed: true,
+    const request = {
+      subjectId: "player-1",
+      requestedAtUtc: "2026-06-04T12:15:00.000Z",
+      requestedBy: "operator" as const,
+      disclosure: "title-and-verdict-only" as const,
+    };
+
+    expect(() =>
+      createQuietMeasureJudgmentResponse({
+        request,
+        eligibility: eligible,
+        reasonCodes: ["verdict-ready"],
+      })
+    ).toThrow(
+      "Quiet Measure verdict responses require a title descriptor when eligibility is met.",
+    );
+  });
+
+  it("rejects malformed public Quiet Measure request and title payloads", () => {
+    const eligible = createQuietMeasureJudgmentEligibility({
+      repeatedMeaningfulEvidence: true,
+      includesPrivateOrLowWitnessEvidence: true,
+      includesCostlyPressureEvent: true,
     });
 
-    expect(policy).toMatchObject({
-      actionId: "return-to-slime",
-      ledgerId: "pp",
-      requiredEvolutionStage: "proto-social",
-      closesAtEvolutionStage: "social-lock",
-      singleUse: true,
+    expect(() =>
+      createQuietMeasureJudgmentResponse({
+        request: {
+          subjectId: "   ",
+          requestedAtUtc: "2026-06-04T12:15:00.000Z",
+          requestedBy: "player",
+          disclosure: "title-and-verdict-only",
+        } as unknown as Parameters<typeof createQuietMeasureJudgmentResponse>[0]["request"],
+        eligibility: eligible,
+        title: {
+          titleId: "restorative-warden",
+          title: "Restorative Warden",
+          verdictLabel: "Mercy outweighed appetite for domination.",
+          perspective: "system-truth",
+          disclosure: "title-and-verdict-only",
+          reasonCodes: ["verdict-restorative"],
+        },
+      })
+    ).toThrow("Quiet Measure judgment request subjectId must be a non-empty string.");
+
+    expect(() =>
+      createQuietMeasureJudgmentResponse({
+        request: {
+          subjectId: "player-1",
+          requestedAtUtc: "not-a-date",
+          requestedBy: "player",
+          disclosure: "title-and-verdict-only",
+        } as unknown as Parameters<typeof createQuietMeasureJudgmentResponse>[0]["request"],
+        eligibility: eligible,
+        title: {
+          titleId: "restorative-warden",
+          title: "Restorative Warden",
+          verdictLabel: "Mercy outweighed appetite for domination.",
+          perspective: "system-truth",
+          disclosure: "title-and-verdict-only",
+          reasonCodes: ["verdict-restorative"],
+        },
+      })
+    ).toThrow("Quiet Measure judgment request requestedAtUtc must be a valid ISO-8601 timestamp.");
+
+    expect(() =>
+      createQuietMeasureJudgmentResponse({
+        request: {
+          subjectId: "player-1",
+          requestedAtUtc: "2026-06-04T12:15:00.000Z",
+          requestedBy: "player",
+          disclosure: "full-breakdown",
+        } as unknown as Parameters<typeof createQuietMeasureJudgmentResponse>[0]["request"],
+        eligibility: eligible,
+        title: {
+          titleId: "restorative-warden",
+          title: "Restorative Warden",
+          verdictLabel: "Mercy outweighed appetite for domination.",
+          perspective: "system-truth",
+          disclosure: "title-and-verdict-only",
+          reasonCodes: ["verdict-restorative"],
+        },
+      })
+    ).toThrow(
+      "Quiet Measure judgment request disclosure must be one of: title-and-verdict-only.",
+    );
+
+    expect(() =>
+      createQuietMeasureJudgmentResponse({
+        request: {
+          subjectId: "player-1",
+          requestedAtUtc: "2026-06-04T12:15:00.000Z",
+          requestedBy: "player",
+          disclosure: "title-and-verdict-only",
+        },
+        eligibility: eligible,
+        title: {
+          titleId: "   ",
+          title: "Restorative Warden",
+          verdictLabel: "Mercy outweighed appetite for domination.",
+          perspective: "system-truth",
+          disclosure: "title-and-verdict-only",
+          reasonCodes: ["verdict-restorative"],
+        } as unknown as Parameters<typeof createQuietMeasureJudgmentResponse>[0]["title"],
+      })
+    ).toThrow("Quiet Measure title titleId must be a non-empty string.");
+
+    expect(() =>
+      createQuietMeasureJudgmentResponse({
+        request: {
+          subjectId: "player-1",
+          requestedAtUtc: "2026-06-04T12:15:00.000Z",
+          requestedBy: "player",
+          disclosure: "title-and-verdict-only",
+        },
+        eligibility: eligible,
+        title: {
+          titleId: "restorative-warden",
+          title: "Restorative Warden",
+          verdictLabel: "Mercy outweighed appetite for domination.",
+          perspective: "public-opinion",
+          disclosure: "title-and-verdict-only",
+          reasonCodes: ["verdict-restorative"],
+        } as unknown as Parameters<typeof createQuietMeasureJudgmentResponse>[0]["title"],
+      })
+    ).toThrow(
+      "Quiet Measure title perspective must be one of: system-truth, observed-reputation.",
+    );
+  });
+
+  it("rejects malformed reason-code and dominant-read payloads", () => {
+    expect(() =>
+      createQuietMeasureJudgmentEligibility({
+        reasonCodes: ["  valid-code  ", "", { invalid: true }] as unknown as string[],
+      })
+    ).toThrow("Quiet Measure eligibility reasonCodes[2] must be a string.");
+
+    const eligible = createQuietMeasureJudgmentEligibility({
+      repeatedMeaningfulEvidence: true,
+      includesPrivateOrLowWitnessEvidence: true,
+      includesCostlyPressureEvent: true,
     });
-    expect(available).toEqual({
-      available: true,
-      reasonCodes: ["devolution-allowed"],
-      policy,
+
+    expect(() =>
+      createQuietMeasureJudgmentResponse({
+        request: {
+          subjectId: "player-1",
+          requestedAtUtc: "2026-06-04T12:15:00.000Z",
+          requestedBy: "player",
+          disclosure: "title-and-verdict-only",
+        },
+        eligibility: eligible,
+        title: {
+          titleId: "restorative-warden",
+          title: "Restorative Warden",
+          verdictLabel: "Mercy outweighed appetite for domination.",
+          perspective: "system-truth",
+          disclosure: "title-and-verdict-only",
+          reasonCodes: ["verdict-restorative"],
+        },
+        dominantReads: [
+          {
+            read: "alignment",
+            perspective: "system-truth",
+            signalBand: "present",
+            confidenceBand: "high",
+            reasonCodes: ["pattern-settled"],
+          },
+        ] as unknown as Parameters<typeof createQuietMeasureJudgmentResponse>[0]["dominantReads"],
+      })
+    ).toThrow(
+      "Quiet Measure dominantReads[0] read must be one of: nature, mask, veil-gap, restitution.",
+    );
+
+    expect(() =>
+      createQuietMeasureJudgmentResponse({
+        request: {
+          subjectId: "player-1",
+          requestedAtUtc: "2026-06-04T12:15:00.000Z",
+          requestedBy: "player",
+          disclosure: "title-and-verdict-only",
+        },
+        eligibility: eligible,
+        title: {
+          titleId: "restorative-warden",
+          title: "Restorative Warden",
+          verdictLabel: "Mercy outweighed appetite for domination.",
+          perspective: "system-truth",
+          disclosure: "title-and-verdict-only",
+          reasonCodes: ["verdict-restorative"],
+        },
+        dominantReads: [
+          {
+            read: "nature",
+            perspective: "system-truth",
+            signalBand: "present",
+            confidenceBand: "high",
+            reasonCodes: ["pattern-settled", "   "],
+          },
+        ] as unknown as Parameters<typeof createQuietMeasureJudgmentResponse>[0]["dominantReads"],
+      })
+    ).toThrow(
+      "Quiet Measure dominantReads[0] reasonCodes must not contain blank strings.",
+    );
+  });
+
+  it("defensively copies quiet-measure nested public payloads", () => {
+    const request = {
+      subjectId: "player-1",
+      requestedAtUtc: "2026-06-04T11:05:00.000Z",
+      requestedBy: "player" as const,
+      disclosure: "title-and-verdict-only" as const,
+    };
+    const title = {
+      titleId: "restorative-warden",
+      title: "Restorative Warden",
+      verdictLabel: "Mercy outweighed appetite for domination.",
+      perspective: "system-truth" as const,
+      disclosure: "title-and-verdict-only" as const,
+      reasonCodes: ["verdict-restorative"],
+    };
+    const dominantReads = [
+      {
+        read: "nature" as const,
+        perspective: "system-truth" as const,
+        signalBand: "present" as const,
+        confidenceBand: "high" as const,
+        reasonCodes: ["pattern-settled"],
+      },
+    ];
+    const eligibility = createQuietMeasureJudgmentEligibility({
+      repeatedMeaningfulEvidence: true,
+      includesPrivateOrLowWitnessEvidence: true,
+      includesCostlyPressureEvent: true,
+      reasonCodes: ["earned-judgment"],
     });
-    expect(locked.available).toBe(false);
-    expect(locked.reasonCodes).toContain("devolution-window-closed");
-    expect(exhausted.available).toBe(false);
-    expect(exhausted.reasonCodes).toContain("devolution-already-used");
-    expect(exhausted.reasonCodes).toContain("insufficient-pp-balance");
+
+    const verdict = createQuietMeasureJudgmentResponse({
+      request,
+      eligibility,
+      title,
+      dominantReads,
+      reasonCodes: ["verdict-ready"],
+    });
+
+    request.subjectId = "mutated-subject";
+    title.title = "Mutated Title";
+    title.reasonCodes.push("mutated-title-code");
+    dominantReads[0].read = "mask";
+    dominantReads[0].reasonCodes.push("mutated-read-code");
+
+    expect(verdict.kind).toBe("verdict");
+    if (verdict.kind !== "verdict") {
+      throw new Error("expected verdict response");
+    }
+
+    expect(verdict.request.subjectId).toBe("player-1");
+    expect(verdict.title.title).toBe("Restorative Warden");
+    expect(verdict.title.reasonCodes).toEqual(["verdict-restorative"]);
+    expect(verdict.dominantReads[0]?.read).toBe("nature");
+    expect(verdict.dominantReads[0]?.reasonCodes).toEqual(["pattern-settled"]);
   });
 
   it("classifies supported game task intents", () => {
