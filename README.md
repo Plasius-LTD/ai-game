@@ -1,10 +1,10 @@
 # @plasius/ai-game
 
-Game-domain AI contracts for player action validation, NPC actions, gossip, feedback, and points-store authority seams.
+Game-domain AI contracts for player action validation, NPC actions, gossip, Quiet Measure mission probes, and Judgment disclosure surfaces.
 
 ## Scope
 
-This package is part of the layered `@plasius/ai-*` package family. It exports canonical public contracts for world events, world-event ingestion, incident impact state, gossip topic projection, and Player System points-store ledgers and spend policies.
+This package is part of the layered `@plasius/ai-*` package family. It exports canonical public contracts for world events, world-event ingestion, incident impact state, gossip topic projection, and Quiet Measure hidden-runtime integration surfaces.
 
 ## Install
 
@@ -18,19 +18,29 @@ npm install @plasius/ai-game
 import {
   AI_GAME_PACKAGE,
   AI_GAME_FEATURE_FLAG_ID,
-  AI_GAME_POINTS_STORE_FEATURE_FLAG_ID,
   aiGameFeatureFlags,
-  getAiGameProtoSocialDevolutionPolicy,
-  getDefaultAiGamePointsSpendPolicies,
   packageDescriptor,
+  AI_GAME_QUIET_MEASURE_FEATURE_FLAG_ID,
   type GameWorldEvent,
   type WorldEventIngestionPort,
   type WorldIncidentThread,
   type GossipTopic,
   type GossipPerspectiveProjection,
-  type AiGamePointsLedgerSnapshot
+  type QuietMeasureAxisSummary,
+  type QuietMeasureMissionProbe,
+  type QuietMeasureJudgmentResponse
 } from "@plasius/ai-game";
 ```
+
+## Quiet Measure contracts
+
+The Quiet Measure surface is intentionally structured as a hidden-runtime contract, not a turnkey morality meter.
+
+- Axis and derived-read contracts expose bounded summaries, confidence bands, evidence windows, and perspective scope without publishing host-specific raw score storage.
+- Mission probe contracts model `Clarify`, `Tempt`, and `Reinforce` modes plus `Restorative`, `Dominant`, `Detached`, and optional `Performative` resolution shapes.
+- Judgment contracts model request, eligibility, insufficient-evidence, and verdict responses with `title-and-verdict-only` disclosure as the default public output.
+- Runtime helpers validate and defensively copy public Quiet Measure request, title, dominant-read, and reason-code payloads so malformed host input fails closed without leaking hidden-score internals.
+- Evaluation fixtures for hero, villain, counterfeit, tyrant, and redemption regression cases belong in `@plasius/ai-evals`, not this package.
 
 ## Development
 
@@ -42,15 +52,6 @@ npm run test:coverage
 npm run pack:check
 ```
 
-## Release Workflow
-
-Protected `main` releases use a two-step flow:
-
-1. Run `.github/workflows/cd.yml` with `bump=patch|minor|major` to push a `release/vX.Y.Z` prep branch and, when repository settings allow it, open the matching PR from `main`. The workflow creates that branch before committing the versioned `package.json` and `CHANGELOG.md` updates, and a tested helper promotes the current `Unreleased` section into the matching version header so the release metadata is preserved for review and publish.
-2. Merge that PR to `main` so the next `main` push can detect the unpublished versioned metadata, tag the release, publish to npm, and publish the GitHub release.
-
-If a release version is already prepared on `main` and only publication remains, rerun `.github/workflows/cd.yml` with `bump=none` to publish the current version from `main` without creating a new release branch.
-
 ## Feature flags
 
 - `ai.game.event-recorder.contracts.enabled`
@@ -59,14 +60,7 @@ If a release version is already prepared on `main` and only publication remains,
 - `ai.game.npc-gossip.topics.enabled`
 - `ai.game.npc-gossip.perspective.enabled`
 - `ai.game.npc-gossip.lifecycle.enabled`
-- `isekai.player-system.points-store.enabled`
-
-## Points Store contracts
-
-- `AI_GAME_POINTS_LEDGER_IDS` exports the canonical `PP`, `ESP`, `TIS`, and `DIS` ledger IDs as `pp`, `esp`, `tis`, and `dis`.
-- `resolveAiGamePointsAuthorityBoundary()` maps each ledger to its public authority band and owning external system.
-- `getDefaultAiGamePointsSpendPolicies()` describes the documented spend-policy surface for each ledger.
-- `getAiGameProtoSocialDevolutionPolicy()` and `evaluateAiGameProtoSocialDevolutionEligibility()` define the one-time proto-social PP devolution window and its closure after social-form lock.
+- `isekai.player-system.quiet-measure.enabled`
 
 ## Governance
 

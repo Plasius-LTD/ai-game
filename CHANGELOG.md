@@ -3,36 +3,22 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/)**, and this project adheres to **[Semantic Versioning](https://semver.org/spec/v2.0.0.html)**.
+
 ## [Unreleased]
-- **Added**
-  - (placeholder)
-
-- **Changed**
-  - (placeholder)
-
-- **Fixed**
-  - (placeholder)
-
-- **Security**
-  - (placeholder)
-## [0.1.6] - 2026-06-13
 
 - **Added**
   - Implemented canonical world event contracts with candidate and canonical envelopes, taxonomy, payload typing, and visibility classes.
   - Added authoritative ingestion interfaces and replay-safe projection/checkpoint contracts.
   - Added incident lifecycle, resolution link, and impact vector models.
   - Added structured gossip topic contracts with lifecycle, confidence, and perspective projection projections.
-  - Documented the public `@plasius/ai-game` contract boundary for Quiet Measure hidden-character inference, mission probes, and Judgment verdict models while keeping raw runtime scores host-private by default.
-  - Added Player System Points Store ledger, spend-policy, authority-boundary, and proto-social devolution contracts for `PP`, `ESP`, `TIS`, and `DIS`.
+  - Added Quiet Measure public contracts for hidden-axis summaries, derived reads, mission probe metadata, and Judgment eligibility or verdict responses under `isekai.player-system.quiet-measure.enabled`.
+  - Documented the Quiet Measure hidden-runtime boundary so hosts can expose title-plus-verdict outputs without publishing raw per-player score storage.
 
 - **Changed**
-  - Extended public package surface to include all world-event, gossip, and points-store contract families needed by `ai-game` and Player System consumers.
-  - Moved npm publication to a protected-main-safe release-prep PR workflow with reconciled package, tag, and npm version state.
+  - Extended the public package surface to include the Quiet Measure contract family alongside world-event and gossip exports while keeping host-private runtime weights out of the package API.
 
 - **Fixed**
-  - Preserved release-branch version and changelog edits so protected-main publish runs can complete from prepared metadata on `main`.
-  - Detected unpublished prepared releases from `main` metadata instead of merge-commit titles so merged release PRs actually publish.
-  - Promoted `Unreleased` changelog entries into versioned release sections through a tested helper instead of fragile inline shell parsing.
+  - Hardened Quiet Measure runtime validation and defensive copying for public Judgment request, title, dominant-read, and reason-code payloads.
 
 - **Security**
   - (placeholder)
@@ -59,4 +45,3 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 
 [0.1.1]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.1
 [0.1.2]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.2
-[0.1.6]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.6
