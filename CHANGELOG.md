@@ -6,10 +6,10 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
-  - (placeholder)
+  - Added Player System-readable training bridge contracts that re-export canonical institutional progression state from `@plasius/training` and bundle stage-gated eligibility, trust markers, and specialization recommendations.
 
 - **Changed**
-  - (placeholder)
+  - Extended the public package surface to consume the published `@plasius/training` authority boundary instead of redefining institution, trust, or specialization vocabulary locally.
 
 - **Fixed**
   - (placeholder)

@@ -9,3 +9,4 @@
 - [ADR-0007: Gossip spread, decay, correction, and resolution](./adr-0007-gossip-spread-decay-correction-and-resolution.md)
 - [ADR-0008: Quiet Measure public contracts and hidden runtime boundary](./adr-0008-quiet-measure-public-contracts-and-hidden-runtime-boundary.md)
 - [ADR-0009: Protected-main releases use release-prep PRs and reconciled version state](./adr-0009-protected-main-release-preparation-and-version-reconciliation.md)
+- [ADR-0010: Training contracts are consumed from @plasius/training](./adr-0010-training-contracts-consumed-from-training-package.md)
