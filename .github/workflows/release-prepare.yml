@@ -85,7 +85,7 @@ jobs:
 
       - name: Create release-prep GitHub App token
         id: release_prep_app_token
-        if: ${{ inputs.release_prep_app_client_id != '' && secrets.RELEASE_PREP_APP_PRIVATE_KEY != '' }}
+        if: ${{ inputs.release_prep_app_client_id != '' }}
         continue-on-error: true
         uses: actions/create-github-app-token@v3
         with:
