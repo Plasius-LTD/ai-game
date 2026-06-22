@@ -12,14 +12,27 @@ import {
   AI_GAME_PACKAGE,
   AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
   AI_GAME_QUIET_MEASURE_FEATURE_FLAG_ID,
+  AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID,
+  AI_GAME_TRAINING_RECOMMENDATION_CONFIDENCE_BANDS,
+  AI_GAME_TRAINING_RECOMMENDATION_READINESS,
+  AI_GAME_TRAINING_STAGE_GATES,
+  AI_GAME_TRAINING_TRUST_MARKER_SOURCES,
   QUIET_MEASURE_AXES,
   QUIET_MEASURE_DERIVED_READS,
   QUIET_MEASURE_MISSION_PROBE_MODES,
   QUIET_MEASURE_MISSION_RESOLUTION_SHAPES,
   AI_GAME_TTS_CACHE_POLICIES,
+  createAiGameInstitutionEligibility,
+  createAiGameSpecializationRecommendation,
+  createAiGameTrainingStateSnapshot,
+  createAiGameTrainingTrustMarker,
   classifyAiGameTask,
   createQuietMeasureJudgmentEligibility,
   createQuietMeasureJudgmentResponse,
+  isAiGameTrainingRecommendationConfidenceBand,
+  isAiGameTrainingRecommendationReadiness,
+  isAiGameTrainingStageGate,
+  isAiGameTrainingTrustMarkerSource,
   isCanonicalWorldEvent,
   isCandidateWorldEvent,
   isGossipTopicActive,
@@ -55,6 +68,266 @@ describe("@plasius/ai-game", () => {
     expect(AI_GAME_QUIET_MEASURE_FEATURE_FLAG_ID).toBe(
       "isekai.player-system.quiet-measure.enabled",
     );
+    expect(AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID).toBe(
+      "isekai.training.institutions.enabled",
+    );
+  });
+
+  it("exports training bridge metadata and validators", () => {
+    expect(AI_GAME_TRAINING_STAGE_GATES).toEqual([
+      "system-first-awakening",
+      "field-repetition",
+      "first-social-institution",
+      "advanced-specialization",
+      "dominion-and-divine",
+    ]);
+    expect(AI_GAME_TRAINING_TRUST_MARKER_SOURCES).toEqual([
+      "system",
+      "mission",
+      "institution",
+      "sponsor",
+    ]);
+    expect(AI_GAME_TRAINING_RECOMMENDATION_CONFIDENCE_BANDS).toEqual([
+      "low",
+      "medium",
+      "high",
+    ]);
+    expect(AI_GAME_TRAINING_RECOMMENDATION_READINESS).toEqual([
+      "ready",
+      "needs-prerequisites",
+      "institution-gated",
+    ]);
+
+    expect(isAiGameTrainingStageGate("advanced-specialization")).toBe(true);
+    expect(isAiGameTrainingStageGate("late-stage")).toBe(false);
+    expect(isAiGameTrainingTrustMarkerSource("mission")).toBe(true);
+    expect(isAiGameTrainingTrustMarkerSource("player")).toBe(false);
+    expect(isAiGameTrainingRecommendationConfidenceBand("medium")).toBe(true);
+    expect(isAiGameTrainingRecommendationConfidenceBand("certain")).toBe(false);
+    expect(isAiGameTrainingRecommendationReadiness("ready")).toBe(true);
+    expect(isAiGameTrainingRecommendationReadiness("blocked")).toBe(false);
+  });
+
+  it("creates frozen training bridge payloads for Player System consumers", () => {
+    const eligibility = createAiGameInstitutionEligibility({
+      institutionId: "academy-1",
+      institutionType: "academy",
+      track: "hybrid",
+      eligible: false,
+      requiredStageGate: "advanced-specialization",
+      trustLevel: "provisional",
+      unmetPrerequisiteCodes: ["academy-entrance", "field-hours"],
+      reasonCodes: ["awaiting-eligibility-review"],
+    });
+    const trustMarker = createAiGameTrainingTrustMarker({
+      markerId: "marker-1",
+      institutionId: "academy-1",
+      trustLevel: "trusted",
+      source: "mission",
+      awardedAtIso: "2026-06-22T08:30:00.000Z",
+      reasonCodes: ["mission-sponsorship"],
+    });
+    const recommendation = createAiGameSpecializationRecommendation({
+      recommendationId: "rec-1",
+      institutionId: "academy-1",
+      institutionType: "academy",
+      leaning: "hybrid",
+      recommendedTrack: "hybrid",
+      confidenceBand: "high",
+      readiness: "needs-prerequisites",
+      unmetPrerequisiteCodes: ["academy-entrance"],
+      reasonCodes: ["hybrid-pressure-tested"],
+    });
+    const snapshot = createAiGameTrainingStateSnapshot({
+      progression: {
+        playerSubjectId: "player-1",
+        institutionId: "academy-1",
+        track: "hybrid",
+        trustLevel: "provisional",
+        eligible: false,
+        updatedAtIso: "2026-06-22T08:45:00.000Z",
+      },
+      institution: {
+        institutionId: "academy-1",
+        type: "academy",
+        track: "hybrid",
+        eligible: false,
+      },
+      eligibility: [eligibility],
+      trustMarkers: [trustMarker],
+      recommendations: [recommendation],
+    });
+
+    expect(eligibility.unmetPrerequisiteCodes).toEqual([
+      "academy-entrance",
+      "field-hours",
+    ]);
+    expect(trustMarker.source).toBe("mission");
+    expect(recommendation.recommendedTrack).toBe("hybrid");
+    expect(snapshot.progression.playerSubjectId).toBe("player-1");
+    expect(snapshot.institution.type).toBe("academy");
+    expect(snapshot.eligibility[0]).toStrictEqual(eligibility);
+    expect(Object.isFrozen(snapshot)).toBe(true);
+    expect(Object.isFrozen(snapshot.eligibility)).toBe(true);
+    expect(Object.isFrozen(snapshot.trustMarkers)).toBe(true);
+    expect(Object.isFrozen(snapshot.recommendations)).toBe(true);
+  });
+
+  it("rejects invalid training bridge values", () => {
+    expect(() =>
+      createAiGameInstitutionEligibility({
+        institutionId: "   ",
+        institutionType: "academy",
+        track: "hybrid",
+        eligible: true,
+        requiredStageGate: "advanced-specialization",
+        trustLevel: "trusted",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("institutionId must be a non-empty string");
+
+    expect(() =>
+      createAiGameInstitutionEligibility({
+        institutionId: "academy-1",
+        institutionType: "guild" as never,
+        track: "hybrid",
+        eligible: true,
+        requiredStageGate: "advanced-specialization",
+        trustLevel: "trusted",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("institutionType must be a supported training institution type");
+
+    expect(() =>
+      createAiGameInstitutionEligibility({
+        institutionId: "academy-1",
+        institutionType: "academy",
+        track: "arcane" as never,
+        eligible: true,
+        requiredStageGate: "advanced-specialization",
+        trustLevel: "trusted",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("track must be a supported MCC expression track");
+
+    expect(() =>
+      createAiGameInstitutionEligibility({
+        institutionId: "academy-1",
+        institutionType: "academy",
+        track: "hybrid",
+        eligible: true,
+        requiredStageGate: "advanced-specialization",
+        trustLevel: "unknown" as never,
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("trustLevel must be a supported training trust level");
+
+    expect(() =>
+      createAiGameInstitutionEligibility({
+        institutionId: "academy-1",
+        institutionType: "academy",
+        track: "hybrid",
+        eligible: true,
+        requiredStageGate: "late-game" as never,
+        trustLevel: "trusted",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("requiredStageGate must be a supported training stage gate");
+
+    expect(() =>
+      createAiGameTrainingTrustMarker({
+        markerId: "marker-1",
+        institutionId: "academy-1",
+        trustLevel: "unknown" as never,
+        source: "mission",
+        awardedAtIso: "2026-06-22T08:30:00.000Z",
+        reasonCodes: [],
+      })).toThrow("trustLevel must be a supported training trust level");
+
+    expect(() =>
+      createAiGameTrainingTrustMarker({
+        markerId: "marker-1",
+        institutionId: "academy-1",
+        trustLevel: "trusted",
+        source: "player" as never,
+        awardedAtIso: "2026-06-22T08:30:00.000Z",
+        reasonCodes: [],
+      })).toThrow("source must be a supported training trust marker source");
+
+    expect(() =>
+      createAiGameTrainingTrustMarker({
+        markerId: "marker-1",
+        institutionId: "academy-1",
+        trustLevel: "trusted",
+        source: "mission",
+        awardedAtIso: "not-a-date",
+        reasonCodes: [],
+      })).toThrow("awardedAtIso must be an ISO-8601 timestamp");
+
+    expect(() =>
+      createAiGameSpecializationRecommendation({
+        recommendationId: "rec-1",
+        institutionId: "academy-1",
+        institutionType: "guild" as never,
+        leaning: "hybrid",
+        recommendedTrack: "hybrid",
+        confidenceBand: "high",
+        readiness: "ready",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("institutionType must be a supported training institution type");
+
+    expect(() =>
+      createAiGameSpecializationRecommendation({
+        recommendationId: "rec-1",
+        institutionId: "academy-1",
+        institutionType: "academy",
+        leaning: "arcane" as never,
+        recommendedTrack: "hybrid",
+        confidenceBand: "high",
+        readiness: "ready",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("leaning must be a supported MCC expression track");
+
+    expect(() =>
+      createAiGameSpecializationRecommendation({
+        recommendationId: "rec-1",
+        institutionId: "academy-1",
+        institutionType: "academy",
+        leaning: "hybrid",
+        recommendedTrack: "arcane" as never,
+        confidenceBand: "high",
+        readiness: "ready",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("recommendedTrack must be a supported MCC expression track");
+
+    expect(() =>
+      createAiGameSpecializationRecommendation({
+        recommendationId: "rec-1",
+        institutionId: "academy-1",
+        institutionType: "academy",
+        leaning: "hybrid",
+        recommendedTrack: "hybrid",
+        confidenceBand: "certain" as never,
+        readiness: "ready",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("confidenceBand must be a supported training recommendation confidence band");
+
+    expect(() =>
+      createAiGameSpecializationRecommendation({
+        recommendationId: "rec-1",
+        institutionId: "academy-1",
+        institutionType: "academy",
+        leaning: "hybrid",
+        recommendedTrack: "hybrid",
+        confidenceBand: "high",
+        readiness: "blocked" as never,
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("readiness must be a supported training recommendation readiness");
   });
 
   it("exports Quiet Measure axes, probe metadata, and eligibility helpers", () => {
