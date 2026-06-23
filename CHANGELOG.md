@@ -9,7 +9,7 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
   - (placeholder)
 
 - **Changed**
-  - (placeholder)
+  - Refreshed the published dependency baselines to `@plasius/training@^0.1.4` and `@types/node@^26.0.0`, then regenerated the package lock from a clean install.
 
 - **Fixed**
   - (placeholder)
