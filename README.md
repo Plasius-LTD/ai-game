@@ -46,6 +46,25 @@ The training surface intentionally reuses `@plasius/training` as the authority f
 - `AiGameSpecializationRecommendation` keeps leaning and recommended-track output inside the canonical `internalized` / `externalized` / `hybrid` MCC doctrine.
 - `createAiGameTrainingStateSnapshot` freezes a Player System-readable bundle of progression, institution, eligibility, trust-marker, and recommendation data.
 
+## Martial training bridge contracts
+
+The martial slice remains a bridge surface over the published
+`@plasius/training` authority package rather than a second source of truth.
+
+- `AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID` re-exports the inherited
+  `isekai.training.martial.enabled` rollout key.
+- `AI_GAME_TRAINING_BARRACKS_DRILL_DELIVERY_MODES`,
+  `AI_GAME_TRAINING_MARTIAL_TECHNIQUE_FAMILIES`, and
+  `AI_GAME_TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES` expose the canonical
+  barracks and bounded anti-spell vocabulary to ai-game consumers.
+- `AiGameTrainingBarracksDrill`, `AiGameTrainingMissionTechniqueUnlock`,
+  `AiGameTrainingMartialTechnique`, and
+  `AiGameTrainingAntiSpellFieldcraftDiscipline` re-export the authoritative
+  training contracts directly.
+- `createAiGameMartialTrainingSnapshot` freezes a Player System-readable bundle
+  of barracks drills, mission-earned unlocks, martial techniques, and bounded
+  anti-spell fieldcraft without redefining those authority models locally.
+
 ## Quiet Measure contracts
 
 The Quiet Measure surface is intentionally structured as a hidden-runtime contract, not a turnkey morality meter.
@@ -76,6 +95,7 @@ npm run pack:check
 - `ai.game.npc-gossip.lifecycle.enabled`
 - `isekai.player-system.quiet-measure.enabled`
 - `isekai.training.institutions.enabled`
+- `isekai.training.martial.enabled`
 
 ## Governance
 

@@ -94,6 +94,6 @@
     "minimatch": "^10.2.1"
   },
   "dependencies": {
-    "@plasius/training": "^0.1.4"
+    "@plasius/training": "^0.1.5"
   }
 }

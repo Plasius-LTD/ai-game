@@ -13,6 +13,12 @@ import {
   AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
   AI_GAME_QUIET_MEASURE_FEATURE_FLAG_ID,
   AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID,
+  AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID,
+  AI_GAME_TRAINING_MARTIAL_TECHNIQUE_TRACKS,
+  AI_GAME_TRAINING_BARRACKS_DRILL_DELIVERY_MODES,
+  AI_GAME_TRAINING_MARTIAL_TECHNIQUE_FAMILIES,
+  AI_GAME_TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES,
+  AI_GAME_TRAINING_ANTI_SPELL_COUNTER_WINDOWS,
   AI_GAME_TRAINING_RECOMMENDATION_CONFIDENCE_BANDS,
   AI_GAME_TRAINING_RECOMMENDATION_READINESS,
   AI_GAME_TRAINING_STAGE_GATES,
@@ -23,12 +29,18 @@ import {
   QUIET_MEASURE_MISSION_RESOLUTION_SHAPES,
   AI_GAME_TTS_CACHE_POLICIES,
   createAiGameInstitutionEligibility,
+  createAiGameMartialTrainingSnapshot,
   createAiGameSpecializationRecommendation,
   createAiGameTrainingStateSnapshot,
   createAiGameTrainingTrustMarker,
   classifyAiGameTask,
   createQuietMeasureJudgmentEligibility,
   createQuietMeasureJudgmentResponse,
+  isAiGameTrainingAntiSpellCounterWindow,
+  isAiGameTrainingAntiSpellFieldcraftFamily,
+  isAiGameTrainingBarracksDrillDeliveryMode,
+  isAiGameTrainingMartialTechniqueFamily,
+  isAiGameTrainingMartialTechniqueTrack,
   isAiGameTrainingRecommendationConfidenceBand,
   isAiGameTrainingRecommendationReadiness,
   isAiGameTrainingStageGate,
@@ -71,6 +83,9 @@ describe("@plasius/ai-game", () => {
     expect(AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID).toBe(
       "isekai.training.institutions.enabled",
     );
+    expect(AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID).toBe(
+      "isekai.training.martial.enabled",
+    );
   });
 
   it("exports training bridge metadata and validators", () => {
@@ -97,6 +112,32 @@ describe("@plasius/ai-game", () => {
       "needs-prerequisites",
       "institution-gated",
     ]);
+    expect(AI_GAME_TRAINING_MARTIAL_TECHNIQUE_TRACKS).toEqual([
+      "internalized",
+      "hybrid",
+    ]);
+    expect(AI_GAME_TRAINING_BARRACKS_DRILL_DELIVERY_MODES).toEqual([
+      "drill",
+      "sparring",
+      "service-obligation",
+      "supervised-mission",
+      "rank-authorization",
+    ]);
+    expect(AI_GAME_TRAINING_MARTIAL_TECHNIQUE_FAMILIES).toContain(
+      "anti-spell-parry",
+    );
+    expect(AI_GAME_TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES).toEqual([
+      "interruption",
+      "concentration-breaking",
+      "projectile-deflection",
+      "ward-stress",
+      "grounding",
+    ]);
+    expect(AI_GAME_TRAINING_ANTI_SPELL_COUNTER_WINDOWS).toEqual([
+      "timing",
+      "delivery",
+      "stability",
+    ]);
 
     expect(isAiGameTrainingStageGate("advanced-specialization")).toBe(true);
     expect(isAiGameTrainingStageGate("late-stage")).toBe(false);
@@ -106,6 +147,22 @@ describe("@plasius/ai-game", () => {
     expect(isAiGameTrainingRecommendationConfidenceBand("certain")).toBe(false);
     expect(isAiGameTrainingRecommendationReadiness("ready")).toBe(true);
     expect(isAiGameTrainingRecommendationReadiness("blocked")).toBe(false);
+    expect(isAiGameTrainingMartialTechniqueTrack("hybrid")).toBe(true);
+    expect(isAiGameTrainingMartialTechniqueTrack("externalized")).toBe(false);
+    expect(isAiGameTrainingBarracksDrillDeliveryMode("sparring")).toBe(true);
+    expect(isAiGameTrainingBarracksDrillDeliveryMode("lecture")).toBe(false);
+    expect(isAiGameTrainingMartialTechniqueFamily("ward-breaking-attack")).toBe(
+      true,
+    );
+    expect(isAiGameTrainingMartialTechniqueFamily("spell-catalogue")).toBe(
+      false,
+    );
+    expect(isAiGameTrainingAntiSpellFieldcraftFamily("grounding")).toBe(true);
+    expect(
+      isAiGameTrainingAntiSpellFieldcraftFamily("total-nullification"),
+    ).toBe(false);
+    expect(isAiGameTrainingAntiSpellCounterWindow("delivery")).toBe(true);
+    expect(isAiGameTrainingAntiSpellCounterWindow("permanence")).toBe(false);
   });
 
   it("creates frozen training bridge payloads for Player System consumers", () => {
@@ -171,6 +228,70 @@ describe("@plasius/ai-game", () => {
     expect(Object.isFrozen(snapshot.eligibility)).toBe(true);
     expect(Object.isFrozen(snapshot.trustMarkers)).toBe(true);
     expect(Object.isFrozen(snapshot.recommendations)).toBe(true);
+  });
+
+  it("creates frozen martial training bridge payloads from the training authority surface", () => {
+    const snapshot = createAiGameMartialTrainingSnapshot({
+      barracksDrills: [
+        {
+          drillId: "drill-1",
+          institutionId: "barracks-1",
+          title: "Shield-line breach drill",
+          track: "internalized",
+          techniqueFamily: "shield-reinforcement",
+          deliveryMode: "drill",
+          missionPrerequisiteCodes: ["frontier-patrol-cleared"],
+          antiSpellFamilies: ["projectile-deflection", "grounding"],
+        },
+      ],
+      missionTechniqueUnlocks: [
+        {
+          unlockId: "unlock-1",
+          missionId: "mission-1",
+          techniqueId: "technique-1",
+          institutionId: "barracks-1",
+          track: "hybrid",
+          techniqueFamily: "mobility-strike",
+          unlockedAtIso: "2026-06-23T09:30:00.000Z",
+          reasonCodes: ["mission-earned"],
+        },
+      ],
+      martialTechniques: [
+        {
+          techniqueId: "technique-1",
+          institutionId: "barracks-1",
+          title: "Ward-breaking lunge",
+          track: "hybrid",
+          family: "ward-breaking-attack",
+          antiSpellFamily: "ward-stress",
+          expressionNote:
+            "Routes a committed MCC pattern from stance through weapon into a bounded ward-breaking strike.",
+        },
+      ],
+      antiSpellFieldcraft: [
+        {
+          disciplineId: "discipline-1",
+          institutionId: "barracks-1",
+          title: "Anchor-cut grounding",
+          track: "internalized",
+          family: "grounding",
+          boundedCounterWindows: ["delivery", "stability"],
+          prohibitedCapabilityCodes: ["generic-magic-cancellation"],
+        },
+      ],
+    });
+
+    expect(snapshot.barracksDrills[0]?.deliveryMode).toBe("drill");
+    expect(snapshot.missionTechniqueUnlocks[0]?.techniqueFamily).toBe(
+      "mobility-strike",
+    );
+    expect(snapshot.martialTechniques[0]?.antiSpellFamily).toBe("ward-stress");
+    expect(snapshot.antiSpellFieldcraft[0]?.family).toBe("grounding");
+    expect(Object.isFrozen(snapshot)).toBe(true);
+    expect(Object.isFrozen(snapshot.barracksDrills)).toBe(true);
+    expect(Object.isFrozen(snapshot.missionTechniqueUnlocks)).toBe(true);
+    expect(Object.isFrozen(snapshot.martialTechniques)).toBe(true);
+    expect(Object.isFrozen(snapshot.antiSpellFieldcraft)).toBe(true);
   });
 
   it("rejects invalid training bridge values", () => {
@@ -328,6 +449,45 @@ describe("@plasius/ai-game", () => {
         unmetPrerequisiteCodes: [],
         reasonCodes: [],
       })).toThrow("readiness must be a supported training recommendation readiness");
+
+    expect(() =>
+      createAiGameMartialTrainingSnapshot({
+        barracksDrills: [
+          {
+            drillId: "drill-1",
+            institutionId: "barracks-1",
+            title: "Invalid drill",
+            track: "externalized" as never,
+            techniqueFamily: "shield-reinforcement",
+            deliveryMode: "drill",
+            missionPrerequisiteCodes: [],
+            antiSpellFamilies: [],
+          },
+        ],
+        missionTechniqueUnlocks: [],
+        martialTechniques: [],
+        antiSpellFieldcraft: [],
+      })).toThrow(
+        "track must be an internalized or hybrid martial technique track",
+      );
+
+    expect(() =>
+      createAiGameMartialTrainingSnapshot({
+        barracksDrills: [],
+        missionTechniqueUnlocks: [],
+        martialTechniques: [],
+        antiSpellFieldcraft: [
+          {
+            disciplineId: "discipline-1",
+            institutionId: "barracks-1",
+            title: "Invalid fieldcraft",
+            track: "internalized",
+            family: "grounding",
+            boundedCounterWindows: ["permanence" as never],
+            prohibitedCapabilityCodes: [],
+          },
+        ],
+      })).toThrow("boundedCounterWindows contains an unsupported value");
   });
 
   it("exports Quiet Measure axes, probe metadata, and eligibility helpers", () => {
