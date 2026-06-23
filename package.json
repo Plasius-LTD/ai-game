@@ -63,7 +63,7 @@
   "homepage": "https://github.com/Plasius-LTD/ai-game#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^25.7.0",
+    "@types/node": "^26.0.0",
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
     "@vitest/coverage-v8": "^4.1.6",
@@ -94,6 +94,6 @@
     "minimatch": "^10.2.1"
   },
   "dependencies": {
-    "@plasius/training": "^0.1.3"
+    "@plasius/training": "^0.1.4"
   }
 }
