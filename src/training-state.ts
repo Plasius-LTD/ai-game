@@ -1,26 +1,70 @@
 import {
   TRAINING_FEATURE_FLAG_ID,
+  TRAINING_MARTIAL_FEATURE_FLAG_ID,
+  TRAINING_MARTIAL_TECHNIQUE_TRACKS,
+  TRAINING_BARRACKS_DRILL_DELIVERY_MODES,
+  TRAINING_MARTIAL_TECHNIQUE_FAMILIES,
+  TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES,
+  TRAINING_ANTI_SPELL_COUNTER_WINDOWS,
+  createTrainingAntiSpellFieldcraftDiscipline,
+  createTrainingBarracksDrill,
   createTrainingInstitution,
+  createTrainingMartialTechnique,
+  createTrainingMissionTechniqueUnlock,
   createTrainingProgressionRecord,
   isMccExpressionTrack,
+  isTrainingAntiSpellCounterWindow,
+  isTrainingAntiSpellFieldcraftFamily,
+  isTrainingBarracksDrillDeliveryMode,
+  isTrainingMartialTechniqueFamily,
+  isTrainingMartialTechniqueTrack,
   isTrainingTrustLevel,
   type MccExpressionTrack,
+  type TrainingAntiSpellCounterWindow,
+  type TrainingAntiSpellFieldcraftDiscipline,
+  type TrainingAntiSpellFieldcraftFamily,
+  type TrainingBarracksDrill,
+  type TrainingBarracksDrillDeliveryMode,
   type TrainingInstitution,
   type TrainingInstitutionType,
+  type TrainingMartialTechnique,
+  type TrainingMartialTechniqueFamily,
+  type TrainingMartialTechniqueTrack,
+  type TrainingMissionTechniqueUnlock,
   type TrainingProgressionRecord,
   type TrainingTrustLevel,
 } from "@plasius/training";
 
 export {
   isMccExpressionTrack,
+  isTrainingAntiSpellCounterWindow as isAiGameTrainingAntiSpellCounterWindow,
+  isTrainingAntiSpellFieldcraftFamily as isAiGameTrainingAntiSpellFieldcraftFamily,
+  isTrainingBarracksDrillDeliveryMode as isAiGameTrainingBarracksDrillDeliveryMode,
+  isTrainingMartialTechniqueFamily as isAiGameTrainingMartialTechniqueFamily,
+  isTrainingMartialTechniqueTrack as isAiGameTrainingMartialTechniqueTrack,
   isTrainingTrustLevel,
   TRAINING_FEATURE_FLAG_ID as AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID,
+  TRAINING_MARTIAL_FEATURE_FLAG_ID as AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID,
+  TRAINING_MARTIAL_TECHNIQUE_TRACKS as AI_GAME_TRAINING_MARTIAL_TECHNIQUE_TRACKS,
+  TRAINING_BARRACKS_DRILL_DELIVERY_MODES as AI_GAME_TRAINING_BARRACKS_DRILL_DELIVERY_MODES,
+  TRAINING_MARTIAL_TECHNIQUE_FAMILIES as AI_GAME_TRAINING_MARTIAL_TECHNIQUE_FAMILIES,
+  TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES as AI_GAME_TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES,
+  TRAINING_ANTI_SPELL_COUNTER_WINDOWS as AI_GAME_TRAINING_ANTI_SPELL_COUNTER_WINDOWS,
 };
 
 export type {
   MccExpressionTrack as AiGameTrainingSpecializationLeaning,
+  TrainingAntiSpellCounterWindow as AiGameTrainingAntiSpellCounterWindow,
+  TrainingAntiSpellFieldcraftDiscipline as AiGameTrainingAntiSpellFieldcraftDiscipline,
+  TrainingAntiSpellFieldcraftFamily as AiGameTrainingAntiSpellFieldcraftFamily,
+  TrainingBarracksDrill as AiGameTrainingBarracksDrill,
+  TrainingBarracksDrillDeliveryMode as AiGameTrainingBarracksDrillDeliveryMode,
   TrainingInstitution as AiGameTrainingInstitution,
   TrainingInstitutionType as AiGameTrainingInstitutionType,
+  TrainingMartialTechnique as AiGameTrainingMartialTechnique,
+  TrainingMartialTechniqueFamily as AiGameTrainingMartialTechniqueFamily,
+  TrainingMartialTechniqueTrack as AiGameTrainingMartialTechniqueTrack,
+  TrainingMissionTechniqueUnlock as AiGameTrainingMissionTechniqueUnlock,
   TrainingProgressionRecord as AiGameTrainingState,
   TrainingTrustLevel as AiGameTrainingTrustLevel,
 };
@@ -102,6 +146,13 @@ export interface AiGameTrainingStateSnapshot {
   readonly eligibility: readonly AiGameInstitutionEligibility[];
   readonly trustMarkers: readonly AiGameTrainingTrustMarker[];
   readonly recommendations: readonly AiGameSpecializationRecommendation[];
+}
+
+export interface AiGameMartialTrainingSnapshot {
+  readonly barracksDrills: readonly TrainingBarracksDrill[];
+  readonly missionTechniqueUnlocks: readonly TrainingMissionTechniqueUnlock[];
+  readonly martialTechniques: readonly TrainingMartialTechnique[];
+  readonly antiSpellFieldcraft: readonly TrainingAntiSpellFieldcraftDiscipline[];
 }
 
 function freezeReadonlyArray<T>(items: readonly T[]): readonly T[] {
@@ -249,6 +300,25 @@ export function createAiGameTrainingStateSnapshot(
     ),
     recommendations: freezeReadonlyArray(
       input.recommendations.map(createAiGameSpecializationRecommendation),
+    ),
+  });
+}
+
+export function createAiGameMartialTrainingSnapshot(
+  input: AiGameMartialTrainingSnapshot,
+): AiGameMartialTrainingSnapshot {
+  return Object.freeze({
+    barracksDrills: freezeReadonlyArray(
+      input.barracksDrills.map(createTrainingBarracksDrill),
+    ),
+    missionTechniqueUnlocks: freezeReadonlyArray(
+      input.missionTechniqueUnlocks.map(createTrainingMissionTechniqueUnlock),
+    ),
+    martialTechniques: freezeReadonlyArray(
+      input.martialTechniques.map(createTrainingMartialTechnique),
+    ),
+    antiSpellFieldcraft: freezeReadonlyArray(
+      input.antiSpellFieldcraft.map(createTrainingAntiSpellFieldcraftDiscipline),
     ),
   });
 }
