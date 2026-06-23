@@ -6,6 +6,20 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.12] - 2026-06-23
+
+- **Added**
   - Added martial training bridge exports that re-expose the authoritative barracks drill, mission unlock, martial technique, and bounded anti-spell fieldcraft contracts from `@plasius/training`.
   - Added `createAiGameMartialTrainingSnapshot` for frozen Player System-readable bundles under `isekai.training.martial.enabled`.
 
@@ -119,3 +133,4 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 [0.1.9]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.9
 [0.1.10]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.10
 [0.1.11]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.11
+[0.1.12]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.12
