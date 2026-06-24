@@ -12,14 +12,39 @@ import {
   AI_GAME_PACKAGE,
   AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
   AI_GAME_QUIET_MEASURE_FEATURE_FLAG_ID,
+  AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID,
+  AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID,
+  AI_GAME_TRAINING_MARTIAL_TECHNIQUE_TRACKS,
+  AI_GAME_TRAINING_BARRACKS_DRILL_DELIVERY_MODES,
+  AI_GAME_TRAINING_MARTIAL_TECHNIQUE_FAMILIES,
+  AI_GAME_TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES,
+  AI_GAME_TRAINING_ANTI_SPELL_COUNTER_WINDOWS,
+  AI_GAME_TRAINING_RECOMMENDATION_CONFIDENCE_BANDS,
+  AI_GAME_TRAINING_RECOMMENDATION_READINESS,
+  AI_GAME_TRAINING_STAGE_GATES,
+  AI_GAME_TRAINING_TRUST_MARKER_SOURCES,
   QUIET_MEASURE_AXES,
   QUIET_MEASURE_DERIVED_READS,
   QUIET_MEASURE_MISSION_PROBE_MODES,
   QUIET_MEASURE_MISSION_RESOLUTION_SHAPES,
   AI_GAME_TTS_CACHE_POLICIES,
+  createAiGameInstitutionEligibility,
+  createAiGameMartialTrainingSnapshot,
+  createAiGameSpecializationRecommendation,
+  createAiGameTrainingStateSnapshot,
+  createAiGameTrainingTrustMarker,
   classifyAiGameTask,
   createQuietMeasureJudgmentEligibility,
   createQuietMeasureJudgmentResponse,
+  isAiGameTrainingAntiSpellCounterWindow,
+  isAiGameTrainingAntiSpellFieldcraftFamily,
+  isAiGameTrainingBarracksDrillDeliveryMode,
+  isAiGameTrainingMartialTechniqueFamily,
+  isAiGameTrainingMartialTechniqueTrack,
+  isAiGameTrainingRecommendationConfidenceBand,
+  isAiGameTrainingRecommendationReadiness,
+  isAiGameTrainingStageGate,
+  isAiGameTrainingTrustMarkerSource,
   isCanonicalWorldEvent,
   isCandidateWorldEvent,
   isGossipTopicActive,
@@ -55,6 +80,414 @@ describe("@plasius/ai-game", () => {
     expect(AI_GAME_QUIET_MEASURE_FEATURE_FLAG_ID).toBe(
       "isekai.player-system.quiet-measure.enabled",
     );
+    expect(AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID).toBe(
+      "isekai.training.institutions.enabled",
+    );
+    expect(AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID).toBe(
+      "isekai.training.martial.enabled",
+    );
+  });
+
+  it("exports training bridge metadata and validators", () => {
+    expect(AI_GAME_TRAINING_STAGE_GATES).toEqual([
+      "system-first-awakening",
+      "field-repetition",
+      "first-social-institution",
+      "advanced-specialization",
+      "dominion-and-divine",
+    ]);
+    expect(AI_GAME_TRAINING_TRUST_MARKER_SOURCES).toEqual([
+      "system",
+      "mission",
+      "institution",
+      "sponsor",
+    ]);
+    expect(AI_GAME_TRAINING_RECOMMENDATION_CONFIDENCE_BANDS).toEqual([
+      "low",
+      "medium",
+      "high",
+    ]);
+    expect(AI_GAME_TRAINING_RECOMMENDATION_READINESS).toEqual([
+      "ready",
+      "needs-prerequisites",
+      "institution-gated",
+    ]);
+    expect(AI_GAME_TRAINING_MARTIAL_TECHNIQUE_TRACKS).toEqual([
+      "internalized",
+      "hybrid",
+    ]);
+    expect(AI_GAME_TRAINING_BARRACKS_DRILL_DELIVERY_MODES).toEqual([
+      "drill",
+      "sparring",
+      "service-obligation",
+      "supervised-mission",
+      "rank-authorization",
+    ]);
+    expect(AI_GAME_TRAINING_MARTIAL_TECHNIQUE_FAMILIES).toContain(
+      "anti-spell-parry",
+    );
+    expect(AI_GAME_TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES).toEqual([
+      "interruption",
+      "concentration-breaking",
+      "projectile-deflection",
+      "ward-stress",
+      "grounding",
+    ]);
+    expect(AI_GAME_TRAINING_ANTI_SPELL_COUNTER_WINDOWS).toEqual([
+      "timing",
+      "delivery",
+      "stability",
+    ]);
+
+    expect(isAiGameTrainingStageGate("advanced-specialization")).toBe(true);
+    expect(isAiGameTrainingStageGate("late-stage")).toBe(false);
+    expect(isAiGameTrainingTrustMarkerSource("mission")).toBe(true);
+    expect(isAiGameTrainingTrustMarkerSource("player")).toBe(false);
+    expect(isAiGameTrainingRecommendationConfidenceBand("medium")).toBe(true);
+    expect(isAiGameTrainingRecommendationConfidenceBand("certain")).toBe(false);
+    expect(isAiGameTrainingRecommendationReadiness("ready")).toBe(true);
+    expect(isAiGameTrainingRecommendationReadiness("blocked")).toBe(false);
+    expect(isAiGameTrainingMartialTechniqueTrack("hybrid")).toBe(true);
+    expect(isAiGameTrainingMartialTechniqueTrack("externalized")).toBe(false);
+    expect(isAiGameTrainingBarracksDrillDeliveryMode("sparring")).toBe(true);
+    expect(isAiGameTrainingBarracksDrillDeliveryMode("lecture")).toBe(false);
+    expect(isAiGameTrainingMartialTechniqueFamily("ward-breaking-attack")).toBe(
+      true,
+    );
+    expect(isAiGameTrainingMartialTechniqueFamily("spell-catalogue")).toBe(
+      false,
+    );
+    expect(isAiGameTrainingAntiSpellFieldcraftFamily("grounding")).toBe(true);
+    expect(
+      isAiGameTrainingAntiSpellFieldcraftFamily("total-nullification"),
+    ).toBe(false);
+    expect(isAiGameTrainingAntiSpellCounterWindow("delivery")).toBe(true);
+    expect(isAiGameTrainingAntiSpellCounterWindow("permanence")).toBe(false);
+  });
+
+  it("creates frozen training bridge payloads for Player System consumers", () => {
+    const eligibility = createAiGameInstitutionEligibility({
+      institutionId: "academy-1",
+      institutionType: "academy",
+      track: "hybrid",
+      eligible: false,
+      requiredStageGate: "advanced-specialization",
+      trustLevel: "provisional",
+      unmetPrerequisiteCodes: ["academy-entrance", "field-hours"],
+      reasonCodes: ["awaiting-eligibility-review"],
+    });
+    const trustMarker = createAiGameTrainingTrustMarker({
+      markerId: "marker-1",
+      institutionId: "academy-1",
+      trustLevel: "trusted",
+      source: "mission",
+      awardedAtIso: "2026-06-22T08:30:00.000Z",
+      reasonCodes: ["mission-sponsorship"],
+    });
+    const recommendation = createAiGameSpecializationRecommendation({
+      recommendationId: "rec-1",
+      institutionId: "academy-1",
+      institutionType: "academy",
+      leaning: "hybrid",
+      recommendedTrack: "hybrid",
+      confidenceBand: "high",
+      readiness: "needs-prerequisites",
+      unmetPrerequisiteCodes: ["academy-entrance"],
+      reasonCodes: ["hybrid-pressure-tested"],
+    });
+    const snapshot = createAiGameTrainingStateSnapshot({
+      progression: {
+        playerSubjectId: "player-1",
+        institutionId: "academy-1",
+        track: "hybrid",
+        trustLevel: "provisional",
+        eligible: false,
+        updatedAtIso: "2026-06-22T08:45:00.000Z",
+      },
+      institution: {
+        institutionId: "academy-1",
+        type: "academy",
+        track: "hybrid",
+        eligible: false,
+      },
+      eligibility: [eligibility],
+      trustMarkers: [trustMarker],
+      recommendations: [recommendation],
+    });
+
+    expect(eligibility.unmetPrerequisiteCodes).toEqual([
+      "academy-entrance",
+      "field-hours",
+    ]);
+    expect(trustMarker.source).toBe("mission");
+    expect(recommendation.recommendedTrack).toBe("hybrid");
+    expect(snapshot.progression.playerSubjectId).toBe("player-1");
+    expect(snapshot.institution.type).toBe("academy");
+    expect(snapshot.eligibility[0]).toStrictEqual(eligibility);
+    expect(Object.isFrozen(snapshot)).toBe(true);
+    expect(Object.isFrozen(snapshot.eligibility)).toBe(true);
+    expect(Object.isFrozen(snapshot.trustMarkers)).toBe(true);
+    expect(Object.isFrozen(snapshot.recommendations)).toBe(true);
+  });
+
+  it("creates frozen martial training bridge payloads from the training authority surface", () => {
+    const snapshot = createAiGameMartialTrainingSnapshot({
+      barracksDrills: [
+        {
+          drillId: "drill-1",
+          institutionId: "barracks-1",
+          title: "Shield-line breach drill",
+          track: "internalized",
+          techniqueFamily: "shield-reinforcement",
+          deliveryMode: "drill",
+          missionPrerequisiteCodes: ["frontier-patrol-cleared"],
+          antiSpellFamilies: ["projectile-deflection", "grounding"],
+        },
+      ],
+      missionTechniqueUnlocks: [
+        {
+          unlockId: "unlock-1",
+          missionId: "mission-1",
+          techniqueId: "technique-1",
+          institutionId: "barracks-1",
+          track: "hybrid",
+          techniqueFamily: "mobility-strike",
+          unlockedAtIso: "2026-06-23T09:30:00.000Z",
+          reasonCodes: ["mission-earned"],
+        },
+      ],
+      martialTechniques: [
+        {
+          techniqueId: "technique-1",
+          institutionId: "barracks-1",
+          title: "Ward-breaking lunge",
+          track: "hybrid",
+          family: "ward-breaking-attack",
+          antiSpellFamily: "ward-stress",
+          expressionNote:
+            "Routes a committed MCC pattern from stance through weapon into a bounded ward-breaking strike.",
+        },
+      ],
+      antiSpellFieldcraft: [
+        {
+          disciplineId: "discipline-1",
+          institutionId: "barracks-1",
+          title: "Anchor-cut grounding",
+          track: "internalized",
+          family: "grounding",
+          boundedCounterWindows: ["delivery", "stability"],
+          prohibitedCapabilityCodes: ["generic-magic-cancellation"],
+        },
+      ],
+    });
+
+    expect(snapshot.barracksDrills[0]?.deliveryMode).toBe("drill");
+    expect(snapshot.missionTechniqueUnlocks[0]?.techniqueFamily).toBe(
+      "mobility-strike",
+    );
+    expect(snapshot.martialTechniques[0]?.antiSpellFamily).toBe("ward-stress");
+    expect(snapshot.antiSpellFieldcraft[0]?.family).toBe("grounding");
+    expect(Object.isFrozen(snapshot)).toBe(true);
+    expect(Object.isFrozen(snapshot.barracksDrills)).toBe(true);
+    expect(Object.isFrozen(snapshot.missionTechniqueUnlocks)).toBe(true);
+    expect(Object.isFrozen(snapshot.martialTechniques)).toBe(true);
+    expect(Object.isFrozen(snapshot.antiSpellFieldcraft)).toBe(true);
+  });
+
+  it("rejects invalid training bridge values", () => {
+    expect(() =>
+      createAiGameInstitutionEligibility({
+        institutionId: "   ",
+        institutionType: "academy",
+        track: "hybrid",
+        eligible: true,
+        requiredStageGate: "advanced-specialization",
+        trustLevel: "trusted",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("institutionId must be a non-empty string");
+
+    expect(() =>
+      createAiGameInstitutionEligibility({
+        institutionId: "academy-1",
+        institutionType: "guild" as never,
+        track: "hybrid",
+        eligible: true,
+        requiredStageGate: "advanced-specialization",
+        trustLevel: "trusted",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("institutionType must be a supported training institution type");
+
+    expect(() =>
+      createAiGameInstitutionEligibility({
+        institutionId: "academy-1",
+        institutionType: "academy",
+        track: "arcane" as never,
+        eligible: true,
+        requiredStageGate: "advanced-specialization",
+        trustLevel: "trusted",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("track must be a supported MCC expression track");
+
+    expect(() =>
+      createAiGameInstitutionEligibility({
+        institutionId: "academy-1",
+        institutionType: "academy",
+        track: "hybrid",
+        eligible: true,
+        requiredStageGate: "advanced-specialization",
+        trustLevel: "unknown" as never,
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("trustLevel must be a supported training trust level");
+
+    expect(() =>
+      createAiGameInstitutionEligibility({
+        institutionId: "academy-1",
+        institutionType: "academy",
+        track: "hybrid",
+        eligible: true,
+        requiredStageGate: "late-game" as never,
+        trustLevel: "trusted",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("requiredStageGate must be a supported training stage gate");
+
+    expect(() =>
+      createAiGameTrainingTrustMarker({
+        markerId: "marker-1",
+        institutionId: "academy-1",
+        trustLevel: "unknown" as never,
+        source: "mission",
+        awardedAtIso: "2026-06-22T08:30:00.000Z",
+        reasonCodes: [],
+      })).toThrow("trustLevel must be a supported training trust level");
+
+    expect(() =>
+      createAiGameTrainingTrustMarker({
+        markerId: "marker-1",
+        institutionId: "academy-1",
+        trustLevel: "trusted",
+        source: "player" as never,
+        awardedAtIso: "2026-06-22T08:30:00.000Z",
+        reasonCodes: [],
+      })).toThrow("source must be a supported training trust marker source");
+
+    expect(() =>
+      createAiGameTrainingTrustMarker({
+        markerId: "marker-1",
+        institutionId: "academy-1",
+        trustLevel: "trusted",
+        source: "mission",
+        awardedAtIso: "not-a-date",
+        reasonCodes: [],
+      })).toThrow("awardedAtIso must be an ISO-8601 timestamp");
+
+    expect(() =>
+      createAiGameSpecializationRecommendation({
+        recommendationId: "rec-1",
+        institutionId: "academy-1",
+        institutionType: "guild" as never,
+        leaning: "hybrid",
+        recommendedTrack: "hybrid",
+        confidenceBand: "high",
+        readiness: "ready",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("institutionType must be a supported training institution type");
+
+    expect(() =>
+      createAiGameSpecializationRecommendation({
+        recommendationId: "rec-1",
+        institutionId: "academy-1",
+        institutionType: "academy",
+        leaning: "arcane" as never,
+        recommendedTrack: "hybrid",
+        confidenceBand: "high",
+        readiness: "ready",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("leaning must be a supported MCC expression track");
+
+    expect(() =>
+      createAiGameSpecializationRecommendation({
+        recommendationId: "rec-1",
+        institutionId: "academy-1",
+        institutionType: "academy",
+        leaning: "hybrid",
+        recommendedTrack: "arcane" as never,
+        confidenceBand: "high",
+        readiness: "ready",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("recommendedTrack must be a supported MCC expression track");
+
+    expect(() =>
+      createAiGameSpecializationRecommendation({
+        recommendationId: "rec-1",
+        institutionId: "academy-1",
+        institutionType: "academy",
+        leaning: "hybrid",
+        recommendedTrack: "hybrid",
+        confidenceBand: "certain" as never,
+        readiness: "ready",
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("confidenceBand must be a supported training recommendation confidence band");
+
+    expect(() =>
+      createAiGameSpecializationRecommendation({
+        recommendationId: "rec-1",
+        institutionId: "academy-1",
+        institutionType: "academy",
+        leaning: "hybrid",
+        recommendedTrack: "hybrid",
+        confidenceBand: "high",
+        readiness: "blocked" as never,
+        unmetPrerequisiteCodes: [],
+        reasonCodes: [],
+      })).toThrow("readiness must be a supported training recommendation readiness");
+
+    expect(() =>
+      createAiGameMartialTrainingSnapshot({
+        barracksDrills: [
+          {
+            drillId: "drill-1",
+            institutionId: "barracks-1",
+            title: "Invalid drill",
+            track: "externalized" as never,
+            techniqueFamily: "shield-reinforcement",
+            deliveryMode: "drill",
+            missionPrerequisiteCodes: [],
+            antiSpellFamilies: [],
+          },
+        ],
+        missionTechniqueUnlocks: [],
+        martialTechniques: [],
+        antiSpellFieldcraft: [],
+      })).toThrow(
+        "track must be an internalized or hybrid martial technique track",
+      );
+
+    expect(() =>
+      createAiGameMartialTrainingSnapshot({
+        barracksDrills: [],
+        missionTechniqueUnlocks: [],
+        martialTechniques: [],
+        antiSpellFieldcraft: [
+          {
+            disciplineId: "discipline-1",
+            institutionId: "barracks-1",
+            title: "Invalid fieldcraft",
+            track: "internalized",
+            family: "grounding",
+            boundedCounterWindows: ["permanence" as never],
+            prohibitedCapabilityCodes: [],
+          },
+        ],
+      })).toThrow("boundedCounterWindows contains an unsupported value");
   });
 
   it("exports Quiet Measure axes, probe metadata, and eligibility helpers", () => {

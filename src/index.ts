@@ -1,3 +1,5 @@
+export * from "./training-state.js";
+
 export interface AiPackageDescriptor {
   readonly packageName: string;
   readonly featureFlagId: string;

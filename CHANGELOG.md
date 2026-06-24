@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/)**, and this project adheres to **[Semantic Versioning](https://semver.org/spec/v2.0.0.html)**.
 ## [Unreleased]
+
 - **Added**
   - (placeholder)
 
@@ -15,6 +16,77 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 
 - **Security**
   - (placeholder)
+
+## [0.1.12] - 2026-06-23
+
+- **Added**
+  - Added martial training bridge exports that re-expose the authoritative barracks drill, mission unlock, martial technique, and bounded anti-spell fieldcraft contracts from `@plasius/training`.
+  - Added `createAiGameMartialTrainingSnapshot` for frozen Player System-readable bundles under `isekai.training.martial.enabled`.
+
+- **Changed**
+  - Updated the published `@plasius/training` dependency baseline to `^0.1.5` so ai-game consumes the released martial authority surface.
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.11] - 2026-06-23
+
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - Refreshed the published dependency baselines to `@plasius/training@^0.1.4` and `@types/node@^26.0.0`, then regenerated the package lock from a clean install.
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.10] - 2026-06-22
+
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.9] - 2026-06-22
+
+- **Added**
+  - Added Player System-readable training bridge contracts that re-export canonical institutional progression state from `@plasius/training` and bundle stage-gated eligibility, trust markers, and specialization recommendations.
+
+- **Changed**
+  - Extended the public package surface to consume the published `@plasius/training` authority boundary instead of redefining institution, trust, or specialization vocabulary locally.
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.8] - 2026-06-22
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
 ## [0.1.7] - 2026-06-14
 
 - **Added**
@@ -57,3 +129,8 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 [0.1.1]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.1
 [0.1.2]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.2
 [0.1.7]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.7
+[0.1.8]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.8
+[0.1.9]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.9
+[0.1.10]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.10
+[0.1.11]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.11
+[0.1.12]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.12
