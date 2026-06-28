@@ -12,7 +12,11 @@ import {
   AI_GAME_PACKAGE,
   AI_GAME_PERSPECTIVE_FEATURE_FLAG_ID,
   AI_GAME_QUIET_MEASURE_FEATURE_FLAG_ID,
+  AI_GAME_TRAINING_ACADEMIES_FEATURE_FLAG_ID,
+  AI_GAME_TRAINING_ACADEMIC_PROGRESS_STAGES,
+  AI_GAME_TRAINING_ACADEMY_ADMISSION_DECISIONS,
   AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID,
+  AI_GAME_TRAINING_INSTRUCTION_ACCESS_LEVELS,
   AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID,
   AI_GAME_TRAINING_MARTIAL_TECHNIQUE_TRACKS,
   AI_GAME_TRAINING_BARRACKS_DRILL_DELIVERY_MODES,
@@ -22,28 +26,38 @@ import {
   AI_GAME_TRAINING_RECOMMENDATION_CONFIDENCE_BANDS,
   AI_GAME_TRAINING_RECOMMENDATION_READINESS,
   AI_GAME_TRAINING_STAGE_GATES,
+  AI_GAME_TRAINING_TECHNIQUE_MASTERY_STATES,
   AI_GAME_TRAINING_TRUST_MARKER_SOURCES,
+  createAiGameAcademicTrainingSnapshot,
   QUIET_MEASURE_AXES,
   QUIET_MEASURE_DERIVED_READS,
   QUIET_MEASURE_MISSION_PROBE_MODES,
   QUIET_MEASURE_MISSION_RESOLUTION_SHAPES,
   AI_GAME_TTS_CACHE_POLICIES,
+  createAiGameTrainingAcademicMissionPrerequisite,
+  createAiGameTrainingAcademyAdmission,
   createAiGameInstitutionEligibility,
   createAiGameMartialTrainingSnapshot,
+  createAiGameTrainingSchoolProgression,
   createAiGameSpecializationRecommendation,
   createAiGameTrainingStateSnapshot,
+  createAiGameTrainingTrackSelection,
   createAiGameTrainingTrustMarker,
   classifyAiGameTask,
   createQuietMeasureJudgmentEligibility,
   createQuietMeasureJudgmentResponse,
+  isAiGameTrainingAcademicProgressStage,
+  isAiGameTrainingAcademyAdmissionDecision,
   isAiGameTrainingAntiSpellCounterWindow,
   isAiGameTrainingAntiSpellFieldcraftFamily,
   isAiGameTrainingBarracksDrillDeliveryMode,
+  isAiGameTrainingInstructionAccessLevel,
   isAiGameTrainingMartialTechniqueFamily,
   isAiGameTrainingMartialTechniqueTrack,
   isAiGameTrainingRecommendationConfidenceBand,
   isAiGameTrainingRecommendationReadiness,
   isAiGameTrainingStageGate,
+  isAiGameTrainingTechniqueMasteryState,
   isAiGameTrainingTrustMarkerSource,
   isCanonicalWorldEvent,
   isCandidateWorldEvent,
@@ -83,6 +97,9 @@ describe("@plasius/ai-game", () => {
     expect(AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID).toBe(
       "isekai.training.institutions.enabled",
     );
+    expect(AI_GAME_TRAINING_ACADEMIES_FEATURE_FLAG_ID).toBe(
+      "isekai.training.academies.enabled",
+    );
     expect(AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID).toBe(
       "isekai.training.martial.enabled",
     );
@@ -101,6 +118,31 @@ describe("@plasius/ai-game", () => {
       "mission",
       "institution",
       "sponsor",
+    ]);
+    expect(AI_GAME_TRAINING_ACADEMIC_PROGRESS_STAGES).toEqual([
+      "school-foundation",
+      "school-advanced",
+      "academy-candidate",
+      "academy-admitted",
+      "track-specialized",
+    ]);
+    expect(AI_GAME_TRAINING_ACADEMY_ADMISSION_DECISIONS).toEqual([
+      "candidate",
+      "admitted",
+      "waitlisted",
+      "deferred",
+    ]);
+    expect(AI_GAME_TRAINING_INSTRUCTION_ACCESS_LEVELS).toEqual([
+      "not-authorized",
+      "school-foundation",
+      "academy-provisional",
+      "academy-specialization",
+    ]);
+    expect(AI_GAME_TRAINING_TECHNIQUE_MASTERY_STATES).toEqual([
+      "not-started",
+      "guided",
+      "field-tested",
+      "validated",
     ]);
     expect(AI_GAME_TRAINING_RECOMMENDATION_CONFIDENCE_BANDS).toEqual([
       "low",
@@ -143,6 +185,18 @@ describe("@plasius/ai-game", () => {
     expect(isAiGameTrainingStageGate("late-stage")).toBe(false);
     expect(isAiGameTrainingTrustMarkerSource("mission")).toBe(true);
     expect(isAiGameTrainingTrustMarkerSource("player")).toBe(false);
+    expect(isAiGameTrainingAcademicProgressStage("academy-admitted")).toBe(true);
+    expect(isAiGameTrainingAcademicProgressStage("academy-graduate")).toBe(
+      false,
+    );
+    expect(isAiGameTrainingAcademyAdmissionDecision("waitlisted")).toBe(true);
+    expect(isAiGameTrainingAcademyAdmissionDecision("approved")).toBe(false);
+    expect(
+      isAiGameTrainingInstructionAccessLevel("academy-specialization"),
+    ).toBe(true);
+    expect(isAiGameTrainingInstructionAccessLevel("lesson-plan")).toBe(false);
+    expect(isAiGameTrainingTechniqueMasteryState("field-tested")).toBe(true);
+    expect(isAiGameTrainingTechniqueMasteryState("mastered")).toBe(false);
     expect(isAiGameTrainingRecommendationConfidenceBand("medium")).toBe(true);
     expect(isAiGameTrainingRecommendationConfidenceBand("certain")).toBe(false);
     expect(isAiGameTrainingRecommendationReadiness("ready")).toBe(true);
@@ -227,6 +281,84 @@ describe("@plasius/ai-game", () => {
     expect(Object.isFrozen(snapshot)).toBe(true);
     expect(Object.isFrozen(snapshot.eligibility)).toBe(true);
     expect(Object.isFrozen(snapshot.trustMarkers)).toBe(true);
+    expect(Object.isFrozen(snapshot.recommendations)).toBe(true);
+  });
+
+  it("creates frozen academic training snapshots from the authority-side academy contracts", () => {
+    const missionPrerequisite = createAiGameTrainingAcademicMissionPrerequisite({
+      prerequisiteId: "prereq-1",
+      institutionId: "school-1",
+      missionId: "mission-1",
+      missionCode: "academy-entrance",
+      minimumProgressStage: "academy-candidate",
+      minimumTrustLevel: "provisional",
+      satisfied: false,
+      reasonCodes: ["complete-entrance-exam"],
+    });
+    const schoolProgression = createAiGameTrainingSchoolProgression({
+      progressionId: "progression-1",
+      schoolInstitutionId: "school-1",
+      stage: "academy-candidate",
+      leaning: "hybrid",
+      missionPrerequisites: [missionPrerequisite],
+      trustMarkers: [
+        {
+          markerId: "marker-1",
+          institutionId: "school-1",
+          trustLevel: "trusted",
+          source: "mission",
+          awardedAtIso: "2026-06-28T09:00:00.000Z",
+          reasonCodes: ["mission-sponsorship"],
+        },
+      ],
+      updatedAtIso: "2026-06-28T09:15:00.000Z",
+    });
+    const admission = createAiGameTrainingAcademyAdmission({
+      admissionId: "admission-1",
+      schoolInstitutionId: "school-1",
+      academyInstitutionId: "academy-1",
+      desiredTrack: "hybrid",
+      decision: "candidate",
+      missionPrerequisites: [missionPrerequisite],
+      supportingTrustMarkerIds: ["marker-1"],
+      evaluatedAtIso: "2026-06-28T09:30:00.000Z",
+      reasonCodes: ["pending-academy-board"],
+    });
+    const trackSelection = createAiGameTrainingTrackSelection({
+      selectionId: "selection-1",
+      institutionId: "academy-1",
+      leaning: "hybrid",
+      selectedTrack: "externalized",
+      instructionAccess: "academy-provisional",
+      techniqueMastery: "guided",
+      updatedAtIso: "2026-06-28T09:45:00.000Z",
+      reasonCodes: ["theory-cleared"],
+    });
+    const recommendation = createAiGameSpecializationRecommendation({
+      recommendationId: "rec-1",
+      institutionId: "academy-1",
+      institutionType: "academy",
+      leaning: "hybrid",
+      recommendedTrack: "externalized",
+      confidenceBand: "medium",
+      readiness: "needs-prerequisites",
+      unmetPrerequisiteCodes: ["academy-entrance"],
+      reasonCodes: ["hybrid-theory-stronger-than-technique-proof"],
+    });
+    const snapshot = createAiGameAcademicTrainingSnapshot({
+      schoolProgression,
+      academyAdmissions: [admission],
+      trackSelections: [trackSelection],
+      recommendations: [recommendation],
+    });
+
+    expect(snapshot.schoolProgression.stage).toBe("academy-candidate");
+    expect(snapshot.academyAdmissions[0]?.decision).toBe("candidate");
+    expect(snapshot.trackSelections[0]?.techniqueMastery).toBe("guided");
+    expect(snapshot.recommendations[0]?.recommendedTrack).toBe("externalized");
+    expect(Object.isFrozen(snapshot)).toBe(true);
+    expect(Object.isFrozen(snapshot.academyAdmissions)).toBe(true);
+    expect(Object.isFrozen(snapshot.trackSelections)).toBe(true);
     expect(Object.isFrozen(snapshot.recommendations)).toBe(true);
   });
 
@@ -384,6 +516,47 @@ describe("@plasius/ai-game", () => {
         awardedAtIso: "not-a-date",
         reasonCodes: [],
       })).toThrow("awardedAtIso must be an ISO-8601 timestamp");
+
+    expect(() =>
+      createAiGameTrainingAcademicMissionPrerequisite({
+        prerequisiteId: "prereq-1",
+        institutionId: "school-1",
+        missionId: "mission-1",
+        missionCode: "academy-entrance",
+        minimumProgressStage: "academy-graduate" as never,
+        minimumTrustLevel: "trusted",
+        satisfied: true,
+        reasonCodes: [],
+      })).toThrow(
+        "minimumProgressStage must be a supported academic progress stage",
+      );
+
+    expect(() =>
+      createAiGameTrainingAcademyAdmission({
+        admissionId: "admission-1",
+        schoolInstitutionId: "school-1",
+        academyInstitutionId: "academy-1",
+        desiredTrack: "hybrid",
+        decision: "approved" as never,
+        missionPrerequisites: [],
+        supportingTrustMarkerIds: [],
+        evaluatedAtIso: "2026-06-28T09:30:00.000Z",
+        reasonCodes: [],
+      })).toThrow("decision must be a supported academy admission decision");
+
+    expect(() =>
+      createAiGameTrainingTrackSelection({
+        selectionId: "selection-1",
+        institutionId: "academy-1",
+        leaning: "hybrid",
+        selectedTrack: "externalized",
+        instructionAccess: "lesson-plan" as never,
+        techniqueMastery: "guided",
+        updatedAtIso: "2026-06-28T09:45:00.000Z",
+        reasonCodes: [],
+      })).toThrow(
+        "instructionAccess must be a supported instruction access level",
+      );
 
     expect(() =>
       createAiGameSpecializationRecommendation({

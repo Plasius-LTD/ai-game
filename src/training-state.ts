@@ -1,24 +1,44 @@
 import {
+  TRAINING_ACADEMIES_FEATURE_FLAG_ID,
   TRAINING_FEATURE_FLAG_ID,
   TRAINING_MARTIAL_FEATURE_FLAG_ID,
+  TRAINING_TRUST_MARKER_SOURCES,
+  TRAINING_ACADEMIC_PROGRESS_STAGES,
+  TRAINING_ACADEMY_ADMISSION_DECISIONS,
+  TRAINING_INSTRUCTION_ACCESS_LEVELS,
+  TRAINING_TECHNIQUE_MASTERY_STATES,
   TRAINING_MARTIAL_TECHNIQUE_TRACKS,
   TRAINING_BARRACKS_DRILL_DELIVERY_MODES,
   TRAINING_MARTIAL_TECHNIQUE_FAMILIES,
   TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES,
   TRAINING_ANTI_SPELL_COUNTER_WINDOWS,
+  createTrainingAcademicMissionPrerequisite,
+  createTrainingAcademyAdmission,
   createTrainingAntiSpellFieldcraftDiscipline,
   createTrainingBarracksDrill,
   createTrainingInstitution,
   createTrainingMartialTechnique,
   createTrainingMissionTechniqueUnlock,
   createTrainingProgressionRecord,
+  createTrainingSchoolProgression,
+  createTrainingTrackSelection,
+  createTrainingTrustMarker,
+  isTrainingAcademicProgressStage,
+  isTrainingAcademyAdmissionDecision,
   isMccExpressionTrack,
   isTrainingAntiSpellCounterWindow,
   isTrainingAntiSpellFieldcraftFamily,
   isTrainingBarracksDrillDeliveryMode,
+  isTrainingInstructionAccessLevel,
   isTrainingMartialTechniqueFamily,
   isTrainingMartialTechniqueTrack,
+  isTrainingTechniqueMasteryState,
+  isTrainingTrustMarkerSource,
   isTrainingTrustLevel,
+  type TrainingAcademicMissionPrerequisite,
+  type TrainingAcademicProgressStage,
+  type TrainingAcademyAdmission,
+  type TrainingAcademyAdmissionDecision,
   type MccExpressionTrack,
   type TrainingAntiSpellCounterWindow,
   type TrainingAntiSpellFieldcraftDiscipline,
@@ -27,24 +47,45 @@ import {
   type TrainingBarracksDrillDeliveryMode,
   type TrainingInstitution,
   type TrainingInstitutionType,
+  type TrainingInstructionAccessLevel,
   type TrainingMartialTechnique,
   type TrainingMartialTechniqueFamily,
   type TrainingMartialTechniqueTrack,
   type TrainingMissionTechniqueUnlock,
   type TrainingProgressionRecord,
+  type TrainingSchoolProgression,
+  type TrainingTrackSelection,
+  type TrainingTechniqueMasteryState,
+  type TrainingTrustMarker,
+  type TrainingTrustMarkerSource,
   type TrainingTrustLevel,
 } from "@plasius/training";
 
 export {
   isMccExpressionTrack,
+  isTrainingAcademicProgressStage as isAiGameTrainingAcademicProgressStage,
+  isTrainingAcademyAdmissionDecision as isAiGameTrainingAcademyAdmissionDecision,
   isTrainingAntiSpellCounterWindow as isAiGameTrainingAntiSpellCounterWindow,
   isTrainingAntiSpellFieldcraftFamily as isAiGameTrainingAntiSpellFieldcraftFamily,
   isTrainingBarracksDrillDeliveryMode as isAiGameTrainingBarracksDrillDeliveryMode,
+  isTrainingInstructionAccessLevel as isAiGameTrainingInstructionAccessLevel,
   isTrainingMartialTechniqueFamily as isAiGameTrainingMartialTechniqueFamily,
   isTrainingMartialTechniqueTrack as isAiGameTrainingMartialTechniqueTrack,
+  isTrainingTechniqueMasteryState as isAiGameTrainingTechniqueMasteryState,
+  isTrainingTrustMarkerSource as isAiGameTrainingTrustMarkerSource,
   isTrainingTrustLevel,
+  createTrainingAcademicMissionPrerequisite as createAiGameTrainingAcademicMissionPrerequisite,
+  createTrainingAcademyAdmission as createAiGameTrainingAcademyAdmission,
+  createTrainingSchoolProgression as createAiGameTrainingSchoolProgression,
+  createTrainingTrackSelection as createAiGameTrainingTrackSelection,
   TRAINING_FEATURE_FLAG_ID as AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID,
+  TRAINING_ACADEMIES_FEATURE_FLAG_ID as AI_GAME_TRAINING_ACADEMIES_FEATURE_FLAG_ID,
   TRAINING_MARTIAL_FEATURE_FLAG_ID as AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID,
+  TRAINING_TRUST_MARKER_SOURCES as AI_GAME_TRAINING_TRUST_MARKER_SOURCES,
+  TRAINING_ACADEMIC_PROGRESS_STAGES as AI_GAME_TRAINING_ACADEMIC_PROGRESS_STAGES,
+  TRAINING_ACADEMY_ADMISSION_DECISIONS as AI_GAME_TRAINING_ACADEMY_ADMISSION_DECISIONS,
+  TRAINING_INSTRUCTION_ACCESS_LEVELS as AI_GAME_TRAINING_INSTRUCTION_ACCESS_LEVELS,
+  TRAINING_TECHNIQUE_MASTERY_STATES as AI_GAME_TRAINING_TECHNIQUE_MASTERY_STATES,
   TRAINING_MARTIAL_TECHNIQUE_TRACKS as AI_GAME_TRAINING_MARTIAL_TECHNIQUE_TRACKS,
   TRAINING_BARRACKS_DRILL_DELIVERY_MODES as AI_GAME_TRAINING_BARRACKS_DRILL_DELIVERY_MODES,
   TRAINING_MARTIAL_TECHNIQUE_FAMILIES as AI_GAME_TRAINING_MARTIAL_TECHNIQUE_FAMILIES,
@@ -53,6 +94,10 @@ export {
 };
 
 export type {
+  TrainingAcademicMissionPrerequisite as AiGameTrainingAcademicMissionPrerequisite,
+  TrainingAcademicProgressStage as AiGameTrainingAcademicProgressStage,
+  TrainingAcademyAdmission as AiGameTrainingAcademyAdmission,
+  TrainingAcademyAdmissionDecision as AiGameTrainingAcademyAdmissionDecision,
   MccExpressionTrack as AiGameTrainingSpecializationLeaning,
   TrainingAntiSpellCounterWindow as AiGameTrainingAntiSpellCounterWindow,
   TrainingAntiSpellFieldcraftDiscipline as AiGameTrainingAntiSpellFieldcraftDiscipline,
@@ -61,11 +106,16 @@ export type {
   TrainingBarracksDrillDeliveryMode as AiGameTrainingBarracksDrillDeliveryMode,
   TrainingInstitution as AiGameTrainingInstitution,
   TrainingInstitutionType as AiGameTrainingInstitutionType,
+  TrainingInstructionAccessLevel as AiGameTrainingInstructionAccessLevel,
   TrainingMartialTechnique as AiGameTrainingMartialTechnique,
   TrainingMartialTechniqueFamily as AiGameTrainingMartialTechniqueFamily,
   TrainingMartialTechniqueTrack as AiGameTrainingMartialTechniqueTrack,
   TrainingMissionTechniqueUnlock as AiGameTrainingMissionTechniqueUnlock,
   TrainingProgressionRecord as AiGameTrainingState,
+  TrainingSchoolProgression as AiGameTrainingSchoolProgression,
+  TrainingTrackSelection as AiGameTrainingTrackSelection,
+  TrainingTechniqueMasteryState as AiGameTrainingTechniqueMasteryState,
+  TrainingTrustMarkerSource as AiGameTrainingTrustMarkerSource,
   TrainingTrustLevel as AiGameTrainingTrustLevel,
 };
 
@@ -79,16 +129,6 @@ export const AI_GAME_TRAINING_STAGE_GATES = [
 
 export type AiGameTrainingStageGate =
   (typeof AI_GAME_TRAINING_STAGE_GATES)[number];
-
-export const AI_GAME_TRAINING_TRUST_MARKER_SOURCES = [
-  "system",
-  "mission",
-  "institution",
-  "sponsor",
-] as const;
-
-export type AiGameTrainingTrustMarkerSource =
-  (typeof AI_GAME_TRAINING_TRUST_MARKER_SOURCES)[number];
 
 export const AI_GAME_TRAINING_RECOMMENDATION_CONFIDENCE_BANDS = [
   "low",
@@ -123,7 +163,7 @@ export interface AiGameTrainingTrustMarker {
   readonly markerId: string;
   readonly institutionId: string;
   readonly trustLevel: TrainingTrustLevel;
-  readonly source: AiGameTrainingTrustMarkerSource;
+  readonly source: TrainingTrustMarkerSource;
   readonly awardedAtIso: string;
   readonly reasonCodes: readonly string[];
 }
@@ -145,6 +185,13 @@ export interface AiGameTrainingStateSnapshot {
   readonly institution: TrainingInstitution;
   readonly eligibility: readonly AiGameInstitutionEligibility[];
   readonly trustMarkers: readonly AiGameTrainingTrustMarker[];
+  readonly recommendations: readonly AiGameSpecializationRecommendation[];
+}
+
+export interface AiGameAcademicTrainingSnapshot {
+  readonly schoolProgression: TrainingSchoolProgression;
+  readonly academyAdmissions: readonly TrainingAcademyAdmission[];
+  readonly trackSelections: readonly TrainingTrackSelection[];
   readonly recommendations: readonly AiGameSpecializationRecommendation[];
 }
 
@@ -184,12 +231,6 @@ export function isAiGameTrainingStageGate(
   value: string,
 ): value is AiGameTrainingStageGate {
   return (AI_GAME_TRAINING_STAGE_GATES as readonly string[]).includes(value);
-}
-
-export function isAiGameTrainingTrustMarkerSource(
-  value: string,
-): value is AiGameTrainingTrustMarkerSource {
-  return (AI_GAME_TRAINING_TRUST_MARKER_SOURCES as readonly string[]).includes(value);
 }
 
 export function isAiGameTrainingRecommendationConfidenceBand(
@@ -235,22 +276,7 @@ export function createAiGameInstitutionEligibility(
 export function createAiGameTrainingTrustMarker(
   input: AiGameTrainingTrustMarker,
 ): AiGameTrainingTrustMarker {
-  assertNonEmptyString(input.markerId, "markerId");
-  assertNonEmptyString(input.institutionId, "institutionId");
-  assertIsoTimestamp(input.awardedAtIso, "awardedAtIso");
-
-  if (!isTrainingTrustLevel(input.trustLevel)) {
-    throw new Error("trustLevel must be a supported training trust level");
-  }
-
-  if (!isAiGameTrainingTrustMarkerSource(input.source)) {
-    throw new Error("source must be a supported training trust marker source");
-  }
-
-  return Object.freeze({
-    ...input,
-    reasonCodes: freezeReadonlyArray(input.reasonCodes),
-  });
+  return createTrainingTrustMarker(input);
 }
 
 export function createAiGameSpecializationRecommendation(
@@ -297,6 +323,23 @@ export function createAiGameTrainingStateSnapshot(
     ),
     trustMarkers: freezeReadonlyArray(
       input.trustMarkers.map(createAiGameTrainingTrustMarker),
+    ),
+    recommendations: freezeReadonlyArray(
+      input.recommendations.map(createAiGameSpecializationRecommendation),
+    ),
+  });
+}
+
+export function createAiGameAcademicTrainingSnapshot(
+  input: AiGameAcademicTrainingSnapshot,
+): AiGameAcademicTrainingSnapshot {
+  return Object.freeze({
+    schoolProgression: createTrainingSchoolProgression(input.schoolProgression),
+    academyAdmissions: freezeReadonlyArray(
+      input.academyAdmissions.map(createTrainingAcademyAdmission),
+    ),
+    trackSelections: freezeReadonlyArray(
+      input.trackSelections.map(createTrainingTrackSelection),
     ),
     recommendations: freezeReadonlyArray(
       input.recommendations.map(createAiGameSpecializationRecommendation),
