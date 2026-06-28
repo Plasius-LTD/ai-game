@@ -43,8 +43,10 @@ The training surface intentionally reuses `@plasius/training` as the authority f
 - `AiGameTrainingState` re-exports the canonical progression record from `@plasius/training`.
 - `AiGameInstitutionEligibility` makes stage-gated institutional availability explicit for Player System consumers.
 - `AiGameTrainingTrustMarker` carries trust evidence without copying broader profile state.
+- `AiGameTrainingAcademicMissionPrerequisite`, `AiGameTrainingSchoolProgression`, `AiGameTrainingAcademyAdmission`, and `AiGameTrainingTrackSelection` re-export the academy authority contracts from `@plasius/training`.
 - `AiGameSpecializationRecommendation` keeps leaning and recommended-track output inside the canonical `internalized` / `externalized` / `hybrid` MCC doctrine.
 - `createAiGameTrainingStateSnapshot` freezes a Player System-readable bundle of progression, institution, eligibility, trust-marker, and recommendation data.
+- `createAiGameAcademicTrainingSnapshot` packages school-stage progress, academy admissions, track-selection authority, and Player System recommendations into one frozen bridge payload.
 
 ## Martial training bridge contracts
 
@@ -95,6 +97,7 @@ npm run pack:check
 - `ai.game.npc-gossip.lifecycle.enabled`
 - `isekai.player-system.quiet-measure.enabled`
 - `isekai.training.institutions.enabled`
+- `isekai.training.academies.enabled`
 - `isekai.training.martial.enabled`
 
 ## Governance

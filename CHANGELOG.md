@@ -6,7 +6,8 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
-  - (placeholder)
+  - Added academy-track bridge exports that re-expose authoritative school progression, academy admission, academic mission prerequisite, and track-selection contracts from `@plasius/training`.
+  - Added `createAiGameAcademicTrainingSnapshot` for frozen Player System-readable school and academy progression bundles under `isekai.training.academies.enabled`.
 
 - **Changed**
   - (placeholder)
