@@ -5,12 +5,19 @@ import {
   AI_GAME_MISSIONS_FEATURE_FLAG_ID,
   assertAiGameMissionContractVersion,
   createAiGameMissionDefinition,
+  createAiGameMissionMccFocusInfluence,
   createAiGameMissionObjectiveState,
+  createAiGameMissionPlayerModelEvidence,
+  createAiGameMissionPlayerModelInfluenceInput,
   createAiGameMissionPlayerResponse,
+  createAiGameMissionReadinessContext,
+  createAiGameMissionRewardBound,
+  createAiGameMissionRewardGrant,
   createAiGameMissionRewardEnvelope,
   isAiGameMissionClass,
   isAiGameMissionConfidenceBand,
   isAiGameMissionFeedbackChannel,
+  isAiGameMissionInfluenceSource,
   isAiGameMissionObjectiveStatus,
   isAiGameMissionPlayerResponseKind,
   isAiGameMissionPreferenceDimension,
@@ -36,6 +43,45 @@ const readinessContext = {
   readinessBand: "needs-prerequisites" as const,
   stageGateRefs: ["system-first-awakening"],
   reasonCodes: ["awaiting-stable-combat-loop"],
+};
+
+const playerModelEvidenceInput = {
+  evidenceId: "evidence-1",
+  sourceId: "response-1",
+  capturedAtIso: "2026-07-10T19:31:00.000Z",
+  repeatedSignalCount: 2,
+  reasonCodes: ["repeat-route-selection"],
+};
+
+const playerModelInfluenceInput = {
+  influenceId: "influence-1",
+  missionId: "mission-1",
+  preferenceDimension: "exploration" as const,
+  source: "mission-response" as const,
+  confidenceScore: 0.82,
+  evidence: playerModelEvidenceInput,
+  repeatedSignalHandling: "cap-at-confidence" as const,
+  readinessContext,
+  mccFocusInfluence: {
+    targetCode: "hybrid",
+    influenceWeight: 0.6,
+    reasonCodes: ["balanced-caster-pressure"],
+  },
+  reasonCodes: ["pinning-shows-follow-through"],
+};
+
+const rewardGrantInput = {
+  rewardId: "reward-1",
+  kind: "item" as const,
+  label: "Starter satchel",
+  bound: {
+    minimum: 1,
+    maximum: 1,
+    cap: 1,
+    capSemantic: "non-stackable" as const,
+  },
+  readinessContext,
+  cannotSkipReasonCodes: ["starter-item-only"],
 };
 
 describe("adaptive mission contracts", () => {
@@ -147,30 +193,7 @@ describe("adaptive mission contracts", () => {
       responseKind: "pinned",
       respondedAtIso: "2026-07-10T19:31:00.000Z",
       objectiveStates: [objectiveState],
-      influenceInputs: [
-        {
-          influenceId: "influence-1",
-          missionId: "mission-1",
-          preferenceDimension: "exploration",
-          source: "mission-response",
-          confidenceScore: 0.82,
-          evidence: {
-            evidenceId: "evidence-1",
-            sourceId: "response-1",
-            capturedAtIso: "2026-07-10T19:31:00.000Z",
-            repeatedSignalCount: 2,
-            reasonCodes: ["repeat-route-selection"],
-          },
-          repeatedSignalHandling: "cap-at-confidence",
-          readinessContext,
-          mccFocusInfluence: {
-            targetCode: "hybrid",
-            influenceWeight: 0.6,
-            reasonCodes: ["balanced-caster-pressure"],
-          },
-          reasonCodes: ["pinning-shows-follow-through"],
-        },
-      ],
+      influenceInputs: [playerModelInfluenceInput],
       reasonCodes: ["player-pinned-guidance"],
     });
 
@@ -289,5 +312,266 @@ describe("adaptive mission contracts", () => {
     ).toThrow(
       "temporaryDurationMinutes is required for temporary-modifier rewards",
     );
+  });
+
+  it("validates readiness and player-model guard paths", () => {
+    expect(isAiGameMissionInfluenceSource("mcc-focus")).toBe(true);
+    expect(isAiGameMissionInfluenceSource("rumour")).toBe(false);
+
+    expect(() => resolveAiGameMissionConfidenceBand(Number.NaN)).toThrow(
+      "confidenceScore must be between 0 and 1",
+    );
+
+    expect(() =>
+      createAiGameMissionReadinessContext({
+        readinessBand: "blocked" as "ready",
+      }),
+    ).toThrow("readinessBand must be a supported mission readiness band");
+
+    const readyContext = createAiGameMissionReadinessContext({
+      readinessBand: "ready",
+    });
+    expect(readyContext.stageGateRefs).toEqual([]);
+    expect(readyContext.reasonCodes).toEqual([]);
+    expect(Object.isFrozen(readyContext)).toBe(true);
+
+    expect(() =>
+      createAiGameMissionMccFocusInfluence({
+        targetCode: " ",
+        influenceWeight: 0.6,
+      }),
+    ).toThrow("targetCode must be a non-empty string");
+
+    expect(() =>
+      createAiGameMissionMccFocusInfluence({
+        targetCode: "hybrid",
+        influenceWeight: 1.1,
+      }),
+    ).toThrow("influenceWeight must be between 0 and 1");
+
+    expect(() =>
+      createAiGameMissionPlayerModelEvidence({
+        ...playerModelEvidenceInput,
+        capturedAtIso: "not-a-date",
+      }),
+    ).toThrow("capturedAtIso must be an ISO-8601 timestamp");
+
+    expect(() =>
+      createAiGameMissionPlayerModelEvidence({
+        ...playerModelEvidenceInput,
+        repeatedSignalCount: 0,
+      }),
+    ).toThrow("repeatedSignalCount must be a positive integer");
+
+    expect(() =>
+      createAiGameMissionPlayerModelInfluenceInput({
+        ...playerModelInfluenceInput,
+        preferenceDimension: "stealth" as "combat",
+      }),
+    ).toThrow(
+      "preferenceDimension must be a supported mission preference dimension",
+    );
+
+    expect(() =>
+      createAiGameMissionPlayerModelInfluenceInput({
+        ...playerModelInfluenceInput,
+        source: "narrator" as "mission-response",
+      }),
+    ).toThrow("source must be a supported mission influence source");
+
+    expect(() =>
+      createAiGameMissionPlayerModelInfluenceInput({
+        ...playerModelInfluenceInput,
+        repeatedSignalHandling: "replay" as "accumulate",
+      }),
+    ).toThrow(
+      "repeatedSignalHandling must be a supported repeated signal handling mode",
+    );
+
+    expect(() =>
+      createAiGameMissionPlayerModelInfluenceInput({
+        ...playerModelInfluenceInput,
+        confidenceBand: "certain" as "high",
+      }),
+    ).toThrow("confidenceBand must be a supported mission confidence band");
+
+    expect(() =>
+      createAiGameMissionPlayerModelInfluenceInput({
+        ...playerModelInfluenceInput,
+        confidenceScore: 0.2,
+        confidenceBand: "high",
+      }),
+    ).toThrow("confidenceBand must match confidenceScore");
+
+    const lowConfidenceInfluence = createAiGameMissionPlayerModelInfluenceInput({
+      ...playerModelInfluenceInput,
+      confidenceScore: 0.2,
+      confidenceBand: undefined,
+      mccFocusInfluence: null,
+      reasonCodes: undefined,
+    });
+
+    expect(lowConfidenceInfluence.confidenceBand).toBe("low");
+    expect(lowConfidenceInfluence.mccFocusInfluence).toBeNull();
+    expect(lowConfidenceInfluence.reasonCodes).toEqual([]);
+  });
+
+  it("validates reward, objective, definition, and response guard paths", () => {
+    expect(() =>
+      createAiGameMissionRewardBound({
+        minimum: 1,
+        maximum: 1,
+        cap: 1,
+        capSemantic: "limitless" as "hard-cap",
+      }),
+    ).toThrow("capSemantic must be a supported mission reward cap semantic");
+
+    expect(() =>
+      createAiGameMissionRewardBound({
+        minimum: 3,
+        maximum: 2,
+        cap: 3,
+        capSemantic: "hard-cap",
+      }),
+    ).toThrow("maximum must be greater than or equal to minimum");
+
+    expect(() =>
+      createAiGameMissionRewardGrant({
+        ...rewardGrantInput,
+        kind: "teleport" as "item",
+      }),
+    ).toThrow("kind must be a supported mission reward kind");
+
+    expect(() =>
+      createAiGameMissionRewardGrant({
+        ...rewardGrantInput,
+        cannotSkipReasonCodes: [],
+      }),
+    ).toThrow("cannotSkipReasonCodes must contain at least one reason code");
+
+    expect(() =>
+      createAiGameMissionRewardGrant({
+        ...rewardGrantInput,
+        kind: "temporary-modifier",
+        temporaryDurationMinutes: 0,
+      }),
+    ).toThrow("temporaryDurationMinutes must be a positive integer");
+
+    expect(() =>
+      createAiGameMissionRewardEnvelope({
+        missionId: "mission-empty",
+        grants: [],
+      }),
+    ).toThrow("grants must contain at least one reward grant");
+
+    expect(() =>
+      createAiGameMissionObjectiveState({
+        ...objectiveState,
+        status: "queued" as "active",
+      }),
+    ).toThrow("status must be a supported mission objective status");
+
+    expect(() =>
+      createAiGameMissionObjectiveState({
+        ...objectiveState,
+        updatedAtIso: "invalid-date",
+      }),
+    ).toThrow("updatedAtIso must be an ISO-8601 timestamp");
+
+    expect(() =>
+      createAiGameMissionObjectiveState({
+        ...objectiveState,
+        currentCount: -1,
+      }),
+    ).toThrow("currentCount must be a non-negative integer");
+
+    const defaultObjectiveState = createAiGameMissionObjectiveState({
+      ...objectiveState,
+      currentCount: undefined,
+      optional: undefined,
+    });
+
+    expect(defaultObjectiveState.currentCount).toBe(0);
+    expect(defaultObjectiveState.optional).toBe(false);
+
+    const validMissionDefinitionInput = {
+      missionId: "mission-2",
+      missionCode: "scout-village",
+      missionClass: "short-term" as const,
+      title: "Scout the village",
+      summary: "Gather safe route knowledge without raising threat.",
+      preferenceDimensions: ["social"] as const,
+      readinessContext,
+      objectiveStates: [objectiveState],
+      rewardEnvelope: {
+        missionId: "mission-2",
+        grants: [rewardGrantInput],
+      },
+    };
+
+    expect(() =>
+      createAiGameMissionDefinition({
+        ...validMissionDefinitionInput,
+        missionClass: "epic" as "short-term",
+      }),
+    ).toThrow("missionClass must be a supported mission class");
+
+    expect(() =>
+      createAiGameMissionDefinition({
+        ...validMissionDefinitionInput,
+        feedbackChannels: ["audio", "mail" as "visual"],
+      }),
+    ).toThrow("feedbackChannels must use supported mission channels");
+
+    expect(() =>
+      createAiGameMissionDefinition({
+        ...validMissionDefinitionInput,
+        preferenceDimensions: [],
+      }),
+    ).toThrow(
+      "preferenceDimensions must contain at least one mission preference dimension",
+    );
+
+    expect(() =>
+      createAiGameMissionDefinition({
+        ...validMissionDefinitionInput,
+        preferenceDimensions: ["social", "stealth" as "combat"],
+      }),
+    ).toThrow(
+      "preferenceDimensions must use supported mission preference dimensions",
+    );
+
+    expect(() =>
+      createAiGameMissionDefinition({
+        ...validMissionDefinitionInput,
+        objectiveStates: [],
+      }),
+    ).toThrow("objectiveStates must contain at least one mission objective");
+
+    const definitionWithDefaults = createAiGameMissionDefinition(
+      validMissionDefinitionInput,
+    );
+
+    expect(definitionWithDefaults.bootstrapSafe).toBe(false);
+    expect(definitionWithDefaults.feedbackChannels).toEqual(["audio", "visual"]);
+
+    expect(() =>
+      createAiGameMissionPlayerResponse({
+        responseId: "response-invalid-timestamp",
+        missionId: "mission-1",
+        responseKind: "accepted",
+        respondedAtIso: "not-a-date",
+      }),
+    ).toThrow("respondedAtIso must be an ISO-8601 timestamp");
+
+    const defaultResponse = createAiGameMissionPlayerResponse({
+      responseId: "response-defaults",
+      missionId: "mission-1",
+      responseKind: "accepted",
+      respondedAtIso: "2026-07-10T19:31:00.000Z",
+    });
+
+    expect(defaultResponse.objectiveStates).toEqual([]);
+    expect(defaultResponse.influenceInputs).toEqual([]);
   });
 });
