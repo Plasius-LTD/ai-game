@@ -1,4 +1,5 @@
 export * from "./training-state.js";
+export * from "./player-system.js";
 
 export interface AiPackageDescriptor {
   readonly packageName: string;
