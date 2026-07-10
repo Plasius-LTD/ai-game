@@ -6,6 +6,20 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.2.0] - 2026-07-10
+
+- **Added**
   - Added versioned Player System session, focus-mode, module, alert-priority, and preference-learning contracts under `isekai.player-system.core.enabled`.
 
 - **Changed**
@@ -150,3 +164,4 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 [0.1.11]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.11
 [0.1.12]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.12
 [0.1.13]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.1.13
+[0.2.0]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.2.0
