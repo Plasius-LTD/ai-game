@@ -67,6 +67,25 @@ The martial slice remains a bridge surface over the published
   of barracks drills, mission-earned unlocks, martial techniques, and bounded
   anti-spell fieldcraft without redefining those authority models locally.
 
+## Player System core contracts
+
+The Player System core contracts are dependency-free shared boundaries under
+`isekai.player-system.core.enabled`. They provide:
+
+- versioned ambient, focused, and combat-safe focus-mode contracts;
+- module descriptors for identity, missions, guild quests, event logs, MCC,
+  tutorials, and the points store;
+- alert priorities with combat-safe delivery filtering that preserves critical
+  and high-priority alerts; and
+- privacy-safe preference-learning inputs with bounded confidence scores,
+  confidence bands, and immutable session profiles.
+
+Use `createAiGamePlayerSystemSession()`,
+`createAiGamePlayerSystemPreferenceProfile()`, and
+`selectAiGamePlayerSystemAlertsForFocusMode()` at package boundaries. The
+contracts intentionally contain no account identifiers, credentials, or raw
+player telemetry.
+
 ## Quiet Measure contracts
 
 The Quiet Measure surface is intentionally structured as a hidden-runtime contract, not a turnkey morality meter.
@@ -96,6 +115,7 @@ npm run pack:check
 - `ai.game.npc-gossip.perspective.enabled`
 - `ai.game.npc-gossip.lifecycle.enabled`
 - `isekai.player-system.quiet-measure.enabled`
+- `isekai.player-system.core.enabled`
 - `isekai.training.institutions.enabled`
 - `isekai.training.academies.enabled`
 - `isekai.training.martial.enabled`

@@ -6,7 +6,7 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
-  - (placeholder)
+  - Added versioned Player System session, focus-mode, module, alert-priority, and preference-learning contracts under `isekai.player-system.core.enabled`.
 
 - **Changed**
   - (placeholder)
