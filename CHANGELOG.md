@@ -6,10 +6,10 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
-  - (placeholder)
+  - Added adaptive System mission contracts under `isekai.player-system.missions.enabled`, including mission-definition, objective-state, player-response, player-model influence, and bounded reward-envelope payloads.
 
 - **Changed**
-  - (placeholder)
+  - Extended the public package surface with progression-safe mission guidance metadata, explicit audio and visual feedback channels, and reward cap semantics for Player System consumers.
 
 - **Fixed**
   - (placeholder)
