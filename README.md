@@ -96,6 +96,24 @@ The Quiet Measure surface is intentionally structured as a hidden-runtime contra
 - Runtime helpers validate and defensively copy public Quiet Measure request, title, dominant-read, and reason-code payloads so malformed host input fails closed without leaking hidden-score internals.
 - Evaluation fixtures for hero, villain, counterfeit, tyrant, and redemption regression cases belong in `@plasius/ai-evals`, not this package.
 
+## Identity projection contracts
+
+Identity projections are versioned, projection-only payloads under
+`isekai.player-system.identity.enabled`. The identity-card boundary remains the
+authority of record; `@plasius/ai-game` only defines portable consumer
+contracts.
+
+- Self projections are full reads.
+- Visible targets are full only when both line of sight and full knowledge are
+  present; otherwise fields are redacted into a partial read.
+- Occluded targets always become partial reads with `Withheld` field values.
+- Target categories are `allied`, `neutral`, `unknown`, and `unfriendly`.
+
+Use `createAiGameIdentityProjectionContract()` to build an immutable payload
+and `selectAiGameVisibleIdentityTargets()` before rendering line-of-sight
+surfaces. The contract does not carry hidden truth or authority-owned mutation
+data.
+
 ## Development
 
 ```bash
@@ -116,6 +134,7 @@ npm run pack:check
 - `ai.game.npc-gossip.lifecycle.enabled`
 - `isekai.player-system.quiet-measure.enabled`
 - `isekai.player-system.core.enabled`
+- `isekai.player-system.identity.enabled`
 - `isekai.training.institutions.enabled`
 - `isekai.training.academies.enabled`
 - `isekai.training.martial.enabled`
