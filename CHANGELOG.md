@@ -21,6 +21,7 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 
 - **Added**
   - Added versioned Player System session, focus-mode, module, alert-priority, and preference-learning contracts under `isekai.player-system.core.enabled`.
+  - Added identity projection and target-classification contracts under `isekai.player-system.identity.enabled`, with self/full, knowledge-gated partial, and line-of-sight-safe target payloads.
 
 - **Changed**
   - (placeholder)

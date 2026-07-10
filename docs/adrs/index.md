@@ -11,3 +11,4 @@
 - [ADR-0009: Protected-main releases use release-prep PRs and reconciled version state](./adr-0009-protected-main-release-preparation-and-version-reconciliation.md)
 - [ADR-0010: Training contracts are consumed from @plasius/training](./adr-0010-training-contracts-consumed-from-training-package.md)
 - [ADR-0011: Player System core contract boundary](./adr-0011-player-system-core-contract-boundary.md)
+- [ADR-0012: Identity projection and target-classification contract boundary](./adr-0012-identity-projection-contract-boundary.md)
