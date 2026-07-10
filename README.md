@@ -1,10 +1,10 @@
 # @plasius/ai-game
 
-Game-domain AI contracts for player action validation, NPC actions, gossip, Quiet Measure mission probes, Judgment disclosure surfaces, and Player System-readable training recommendations.
+Game-domain AI contracts for player action validation, adaptive System missions, NPC actions, gossip, Quiet Measure mission probes, Judgment disclosure surfaces, and Player System-readable training recommendations.
 
 ## Scope
 
-This package is part of the layered `@plasius/ai-*` package family. It exports canonical public contracts for world events, world-event ingestion, incident impact state, gossip topic projection, Quiet Measure hidden-runtime integration surfaces, and the Player System bridge layer that consumes `@plasius/training`.
+This package is part of the layered `@plasius/ai-*` package family. It exports canonical public contracts for adaptive System missions, world events, world-event ingestion, incident impact state, gossip topic projection, Quiet Measure hidden-runtime integration surfaces, and the Player System bridge layer that consumes `@plasius/training`.
 
 ## Install
 
@@ -85,6 +85,35 @@ Use `createAiGamePlayerSystemSession()`,
 `selectAiGamePlayerSystemAlertsForFocusMode()` at package boundaries. The
 contracts intentionally contain no account identifiers, credentials, or raw
 player telemetry.
+
+## Adaptive mission contracts
+
+Adaptive System missions are versioned, dependency-free shared contracts under
+`isekai.player-system.missions.enabled`. They keep the Player System's internal
+mission vocabulary portable while preserving progression safety.
+
+- `AiGameMissionDefinition` captures bootstrap, short-term, medium-term, and
+  long-horizon mission guidance with explicit readiness context, nearby
+  opportunity codes, world-pressure codes, and dual `audio` / `visual`
+  feedback channels.
+- `AiGameMissionObjectiveState` freezes bounded progress snapshots for mission
+  objectives without leaking host runtime internals.
+- `AiGameMissionPlayerResponse` explicitly models acceptance, refusal,
+  ignored or declined outcomes, pinning, completion, failure, and abandonment
+  so those events can feed the player model safely.
+- `AiGameMissionPlayerModelInfluenceInput` carries preference dimensions,
+  bounded confidence, evidence metadata, repeated-signal handling, MCC focus
+  influence, and readiness or gate context.
+- `AiGameMissionRewardEnvelope` encodes progression-safe accelerants only:
+  bounded currencies, items, recipes, temporary modifiers, and knowledge
+  unlocks with minimum, maximum, cap, cap semantic, readiness context, stage
+  gates, and explicit `cannotSkipReasonCodes`.
+
+Use `createAiGameMissionDefinition()`,
+`createAiGameMissionPlayerResponse()`, and
+`createAiGameMissionRewardEnvelope()` at package boundaries. The mission
+surface intentionally avoids raw telemetry, progression writes, and
+authority-owned tuning data.
 
 ## Quiet Measure contracts
 
