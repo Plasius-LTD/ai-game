@@ -6,7 +6,8 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
-  - (placeholder)
+  - Added observed-event log, recency-window, highlight-summary, and gossip-export contracts under `isekai.player-system.logs.enabled`.
+  - Added defensive validation and immutable factories so gossip highlights can only reference the observed events in their source window.
 
 - **Changed**
   - (placeholder)

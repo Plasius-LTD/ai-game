@@ -2,6 +2,7 @@ export * from "./training-state.js";
 export * from "./player-system.js";
 export * from "./missions.js";
 export * from "./identity.js";
+export * from "./observed-events.js";
 
 export interface AiPackageDescriptor {
   readonly packageName: string;

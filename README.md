@@ -1,6 +1,6 @@
 # @plasius/ai-game
 
-Game-domain AI contracts for player action validation, adaptive System missions, NPC actions, gossip, Quiet Measure mission probes, Judgment disclosure surfaces, and Player System-readable training recommendations.
+Game-domain AI contracts for player action validation, adaptive System missions, NPC actions, gossip, observed event logs, Quiet Measure mission probes, Judgment disclosure surfaces, and Player System-readable training recommendations.
 
 ## Scope
 
@@ -156,6 +156,27 @@ and `selectAiGameVisibleIdentityTargets()` before rendering line-of-sight
 surfaces. The contract does not carry hidden truth or authority-owned mutation
 data.
 
+## Observed event log and gossip export contracts
+
+Observed event contracts provide a shared, privacy-safe basis for Player System
+logs and gossip transport under `isekai.player-system.logs.enabled`:
+
+- `AiGameObservedEvent` carries bounded domain references, summaries, visibility,
+  significance, and tags without raw player telemetry or account identifiers.
+- `AiGameObservedEventRecencyWindow` validates that events fall inside a single
+  time-bounded window.
+- `AiGameObservedEventHighlightSummary` references event IDs from its source
+  window rather than copying event truth.
+- `AiGameGossipExport` packages one recency window and validated highlights for
+  a declared player, NPC, or public audience.
+
+Use `createAiGameObservedEvent()`,
+`createAiGameObservedEventRecencyWindow()`,
+`createAiGameObservedEventHighlightSummary()`, and
+`createAiGameGossipExport()` at package boundaries. Audience authorization,
+feature-flag evaluation, persistence, and gossip generation remain the
+responsibility of consuming services.
+
 ## Development
 
 ```bash
@@ -178,6 +199,7 @@ npm run pack:check
 - `isekai.player-system.core.enabled`
 - `isekai.player-system.guidance-nfr.enabled`
 - `isekai.player-system.identity.enabled`
+- `isekai.player-system.logs.enabled`
 - `isekai.training.institutions.enabled`
 - `isekai.training.academies.enabled`
 - `isekai.training.martial.enabled`
