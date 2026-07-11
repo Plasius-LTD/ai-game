@@ -6,7 +6,8 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
-  - (placeholder)
+  - Added bounded MCC focus-target, readiness-warning, spellcraft recommendation, and preview-only advisory contracts under `isekai.player-system.mcc-guidance.enabled`.
+  - Added immutable guidance snapshot factories with reference, severity, and collection-bound validation.
 
 - **Changed**
   - (placeholder)
