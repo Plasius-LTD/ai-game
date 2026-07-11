@@ -168,6 +168,170 @@ describe("guild quest contracts", () => {
     expect(failed.guildTruth.failure?.retryable).toBe(true);
   });
 
+  it("fails closed for invalid identifiers, states, timestamps, and duplicates", () => {
+    expect(() =>
+      createAiGameGuildQuest({ ...activeQuestInput, questId: " " }),
+    ).toThrow("questId must be a non-empty string");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: { ...activeQuestInput.guildTruth, authorityRevision: 0 },
+      }),
+    ).toThrow("authorityRevision must be a positive integer");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: {
+          ...activeQuestInput.guildTruth,
+          progress: {
+            ...activeQuestInput.guildTruth.progress,
+            updatedAtIso: "not-a-timestamp",
+          },
+        },
+      }),
+    ).toThrow("updatedAtIso must be an ISO-8601 timestamp");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: {
+          ...activeQuestInput.guildTruth,
+          progress: {
+            ...activeQuestInput.guildTruth.progress,
+            objectives: [
+              {
+                ...activeQuestInput.guildTruth.progress.objectives[0],
+                currentCount: -1,
+              },
+            ],
+          },
+        },
+      }),
+    ).toThrow("currentCount must be a non-negative integer");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: {
+          ...activeQuestInput.guildTruth,
+          progress: {
+            ...activeQuestInput.guildTruth.progress,
+            objectives: [
+              {
+                ...activeQuestInput.guildTruth.progress.objectives[0],
+                status: "invalid" as never,
+              },
+            ],
+          },
+        },
+      }),
+    ).toThrow("status must be a supported guild-quest objective status");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: {
+          ...activeQuestInput.guildTruth,
+          progress: { ...activeQuestInput.guildTruth.progress, status: "invalid" as never },
+        },
+      }),
+    ).toThrow("status must be a supported guild-quest status");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: {
+          ...activeQuestInput.guildTruth,
+          progress: { ...activeQuestInput.guildTruth.progress, objectives: [] },
+        },
+      }),
+    ).toThrow("objectives must contain at least one objective");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: {
+          ...activeQuestInput.guildTruth,
+          progress: {
+            ...activeQuestInput.guildTruth.progress,
+            objectives: [
+              activeQuestInput.guildTruth.progress.objectives[0],
+              activeQuestInput.guildTruth.progress.objectives[0],
+            ],
+          },
+        },
+      }),
+    ).toThrow("objectiveIds must be unique within a quest");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: {
+          ...activeQuestInput.guildTruth,
+          rewardPreview: {
+            ...activeQuestInput.guildTruth.rewardPreview,
+            entries: [
+              {
+                ...activeQuestInput.guildTruth.rewardPreview.entries[0],
+                kind: "invalid" as never,
+              },
+            ],
+          },
+        },
+      }),
+    ).toThrow("kind must be a supported guild-quest reward kind");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: {
+          ...activeQuestInput.guildTruth,
+          rewardPreview: {
+            ...activeQuestInput.guildTruth.rewardPreview,
+            entries: [
+              activeQuestInput.guildTruth.rewardPreview.entries[0],
+              activeQuestInput.guildTruth.rewardPreview.entries[0],
+            ],
+          },
+        },
+      }),
+    ).toThrow("rewardIds must be unique within a reward preview");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: { ...activeQuestInput.guildTruth, status: "invalid" as never },
+      }),
+    ).toThrow("status must be a supported guild-quest status");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: { ...activeQuestInput.guildTruth, status: "completed" },
+      }),
+    ).toThrow("progress.status must match guildTruth.status");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        guildTruth: {
+          ...activeQuestInput.guildTruth,
+          failure: {
+            failureId: "failure-1",
+            code: "manual-failure",
+            summary: "Guild authority failed the quest.",
+            failedAtIso: "2026-07-11T14:00:00.000Z",
+            retryable: false,
+          },
+        },
+      }),
+    ).toThrow("failure details are only valid for failed guild quests");
+    expect(() =>
+      createAiGameGuildQuest({
+        ...activeQuestInput,
+        systemAnnotations: { recommendation: "invalid" as never },
+      }),
+    ).toThrow("recommendation must be a supported System annotation");
+    expect(() =>
+      createAiGameGuildQuestSyncPayload({
+        guildId: "guild-1",
+        authorityRevision: 4,
+        syncedAtIso: "2026-07-11T13:05:00.000Z",
+        quests: [activeQuestInput, activeQuestInput],
+      }),
+    ).toThrow("questIds must be unique within a sync payload");
+  });
+
   it("rejects malformed reward previews and inconsistent sync payloads", () => {
     expect(() =>
       createAiGameGuildQuest({
