@@ -7,6 +7,9 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 
 - **Added**
   - (placeholder)
+  - Added bounded Player System guidance cue contracts with explicit alert
+    priority, multimodal fallback identifiers, payload-size, and frequency
+    metadata under `isekai.player-system.guidance-nfr.enabled`.
 
 - **Changed**
   - (placeholder)

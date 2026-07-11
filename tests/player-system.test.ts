@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_OCCURRENCES_PER_MINUTE,
+  AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_PAYLOAD_BYTES,
+  AI_GAME_PLAYER_SYSTEM_GUIDANCE_FALLBACK_CONTRACTS,
+  AI_GAME_PLAYER_SYSTEM_GUIDANCE_NFR_FEATURE_FLAG_ID,
   AI_GAME_PLAYER_SYSTEM_CONTRACT_VERSION,
   AI_GAME_PLAYER_SYSTEM_FEATURE_FLAG_ID,
   createAiGamePlayerSystemAlert,
+  createAiGamePlayerSystemGuidanceCue,
   createAiGamePlayerSystemPreferenceConfidenceState,
   createAiGamePlayerSystemPreferenceInput,
   createAiGamePlayerSystemPreferenceProfile,
@@ -26,6 +31,83 @@ const preferenceInput = createAiGamePlayerSystemPreferenceInput({
 });
 
 describe("Player System shared contracts", () => {
+  it("exports guidance cue priorities, budgets, and accessible fallbacks", () => {
+    expect(AI_GAME_PLAYER_SYSTEM_GUIDANCE_NFR_FEATURE_FLAG_ID).toBe(
+      "isekai.player-system.guidance-nfr.enabled",
+    );
+    expect(AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_PAYLOAD_BYTES).toBe(4096);
+    expect(AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_OCCURRENCES_PER_MINUTE).toBe(30);
+    expect(AI_GAME_PLAYER_SYSTEM_GUIDANCE_FALLBACK_CONTRACTS).toEqual([
+      {
+        id: "voice-unavailable",
+        source: "voice",
+        behavior: "touch-controls-and-text-summary",
+      },
+      {
+        id: "narration-unavailable",
+        source: "narration",
+        behavior: "status-copy-and-live-region",
+      },
+      {
+        id: "speech-capture-unavailable",
+        source: "speech-capture",
+        behavior: "manual-actions-stay-visible",
+      },
+    ]);
+  });
+
+  it("creates bounded guidance cues and rejects unsafe metadata", () => {
+    const cue = createAiGamePlayerSystemGuidanceCue({
+      cueId: "narration-alert",
+      priority: "high",
+      source: "narration",
+      fallbackId: "narration-unavailable",
+      maxPayloadBytes: 1024,
+      maxOccurrencesPerMinute: 4,
+    });
+
+    expect(cue).toMatchObject({
+      contractVersion: "1.0",
+      featureFlagId: "isekai.player-system.guidance-nfr.enabled",
+      fallbackId: "narration-unavailable",
+    });
+    expect(Object.isFrozen(cue)).toBe(true);
+
+    expect(() =>
+      createAiGamePlayerSystemGuidanceCue({
+        cueId: "mismatched-fallback",
+        priority: "normal",
+        source: "voice",
+        fallbackId: "narration-unavailable",
+        maxPayloadBytes: 1024,
+        maxOccurrencesPerMinute: 1,
+      }),
+    ).toThrow("fallbackId must match the guidance cue source");
+
+    expect(() =>
+      createAiGamePlayerSystemGuidanceCue({
+        cueId: "oversized",
+        priority: "normal",
+        source: "voice",
+        fallbackId: "voice-unavailable",
+        maxPayloadBytes: AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_PAYLOAD_BYTES + 1,
+        maxOccurrencesPerMinute: 1,
+      }),
+    ).toThrow("maxPayloadBytes must be between 1 and 4096");
+
+    expect(() =>
+      createAiGamePlayerSystemGuidanceCue({
+        cueId: "too-frequent",
+        priority: "normal",
+        source: "voice",
+        fallbackId: "voice-unavailable",
+        maxPayloadBytes: 1024,
+        maxOccurrencesPerMinute:
+          AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_OCCURRENCES_PER_MINUTE + 1,
+      }),
+    ).toThrow("maxOccurrencesPerMinute must be between 1 and 30");
+  });
+
   it("exposes the inherited feature flag and versioned focus contracts", () => {
     expect(AI_GAME_PLAYER_SYSTEM_FEATURE_FLAG_ID).toBe(
       "isekai.player-system.core.enabled",

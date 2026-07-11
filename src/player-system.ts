@@ -6,6 +6,12 @@ export const AI_GAME_PLAYER_SYSTEM_CONTRACT_VERSION = "1.0" as const;
 export type AiGamePlayerSystemContractVersion =
   typeof AI_GAME_PLAYER_SYSTEM_CONTRACT_VERSION;
 
+export const AI_GAME_PLAYER_SYSTEM_GUIDANCE_NFR_FEATURE_FLAG_ID =
+  "isekai.player-system.guidance-nfr.enabled";
+
+export const AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_PAYLOAD_BYTES = 4096;
+export const AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_OCCURRENCES_PER_MINUTE = 30;
+
 export const AI_GAME_PLAYER_SYSTEM_FOCUS_MODES = [
   "ambient",
   "focused",
@@ -42,6 +48,69 @@ export const AI_GAME_PLAYER_SYSTEM_ALERT_PRIORITIES = [
 
 export type AiGamePlayerSystemAlertPriority =
   (typeof AI_GAME_PLAYER_SYSTEM_ALERT_PRIORITIES)[number];
+
+export const AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_SOURCES = [
+  "voice",
+  "narration",
+  "speech-capture",
+] as const;
+
+export type AiGamePlayerSystemGuidanceCueSource =
+  (typeof AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_SOURCES)[number];
+
+export const AI_GAME_PLAYER_SYSTEM_GUIDANCE_FALLBACK_IDS = [
+  "voice-unavailable",
+  "narration-unavailable",
+  "speech-capture-unavailable",
+] as const;
+
+export type AiGamePlayerSystemGuidanceFallbackId =
+  (typeof AI_GAME_PLAYER_SYSTEM_GUIDANCE_FALLBACK_IDS)[number];
+
+export const AI_GAME_PLAYER_SYSTEM_GUIDANCE_FALLBACK_BEHAVIORS = [
+  "touch-controls-and-text-summary",
+  "status-copy-and-live-region",
+  "manual-actions-stay-visible",
+] as const;
+
+export type AiGamePlayerSystemGuidanceFallbackBehavior =
+  (typeof AI_GAME_PLAYER_SYSTEM_GUIDANCE_FALLBACK_BEHAVIORS)[number];
+
+export interface AiGamePlayerSystemGuidanceFallbackContract {
+  readonly id: AiGamePlayerSystemGuidanceFallbackId;
+  readonly source: AiGamePlayerSystemGuidanceCueSource;
+  readonly behavior: AiGamePlayerSystemGuidanceFallbackBehavior;
+}
+
+export const AI_GAME_PLAYER_SYSTEM_GUIDANCE_FALLBACK_CONTRACTS: readonly AiGamePlayerSystemGuidanceFallbackContract[] =
+  Object.freeze([
+    Object.freeze({
+      id: "voice-unavailable",
+      source: "voice",
+      behavior: "touch-controls-and-text-summary",
+    }),
+    Object.freeze({
+      id: "narration-unavailable",
+      source: "narration",
+      behavior: "status-copy-and-live-region",
+    }),
+    Object.freeze({
+      id: "speech-capture-unavailable",
+      source: "speech-capture",
+      behavior: "manual-actions-stay-visible",
+    }),
+  ]);
+
+export interface AiGamePlayerSystemGuidanceCue {
+  readonly cueId: string;
+  readonly contractVersion: AiGamePlayerSystemContractVersion;
+  readonly featureFlagId: typeof AI_GAME_PLAYER_SYSTEM_GUIDANCE_NFR_FEATURE_FLAG_ID;
+  readonly priority: AiGamePlayerSystemAlertPriority;
+  readonly source: AiGamePlayerSystemGuidanceCueSource;
+  readonly fallbackId: AiGamePlayerSystemGuidanceFallbackId;
+  readonly maxPayloadBytes: number;
+  readonly maxOccurrencesPerMinute: number;
+}
 
 export const AI_GAME_PLAYER_SYSTEM_PREFERENCE_KINDS = [
   "combat",
@@ -343,6 +412,103 @@ export function isAiGamePlayerSystemAlertPriority(
   value: string,
 ): value is AiGamePlayerSystemAlertPriority {
   return isMember(value, AI_GAME_PLAYER_SYSTEM_ALERT_PRIORITIES);
+}
+
+export function isAiGamePlayerSystemGuidanceCueSource(
+  value: string,
+): value is AiGamePlayerSystemGuidanceCueSource {
+  return isMember(value, AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_SOURCES);
+}
+
+export function isAiGamePlayerSystemGuidanceFallbackId(
+  value: string,
+): value is AiGamePlayerSystemGuidanceFallbackId {
+  return isMember(value, AI_GAME_PLAYER_SYSTEM_GUIDANCE_FALLBACK_IDS);
+}
+
+export function isAiGamePlayerSystemGuidanceFallbackBehavior(
+  value: string,
+): value is AiGamePlayerSystemGuidanceFallbackBehavior {
+  return isMember(value, AI_GAME_PLAYER_SYSTEM_GUIDANCE_FALLBACK_BEHAVIORS);
+}
+
+export function getAiGamePlayerSystemGuidanceFallbackContract(
+  fallbackId: AiGamePlayerSystemGuidanceFallbackId,
+): AiGamePlayerSystemGuidanceFallbackContract {
+  const contract = AI_GAME_PLAYER_SYSTEM_GUIDANCE_FALLBACK_CONTRACTS.find(
+    (candidate) => candidate.id === fallbackId,
+  );
+
+  if (!contract) {
+    throw new Error("fallbackId must identify a supported guidance fallback");
+  }
+
+  return contract;
+}
+
+export function createAiGamePlayerSystemGuidanceCue(
+  input: Omit<
+    AiGamePlayerSystemGuidanceCue,
+    "contractVersion" | "featureFlagId"
+  > & {
+    readonly contractVersion?: AiGamePlayerSystemContractVersion;
+  },
+): AiGamePlayerSystemGuidanceCue {
+  assertNonEmptyString(input.cueId, "cueId");
+  assertContractVersion(
+    input.contractVersion ?? AI_GAME_PLAYER_SYSTEM_CONTRACT_VERSION,
+  );
+
+  if (!isAiGamePlayerSystemAlertPriority(input.priority)) {
+    throw new Error("priority must be a supported Player System alert priority");
+  }
+
+  if (!isAiGamePlayerSystemGuidanceCueSource(input.source)) {
+    throw new Error("source must be a supported guidance cue source");
+  }
+
+  if (!isAiGamePlayerSystemGuidanceFallbackId(input.fallbackId)) {
+    throw new Error("fallbackId must identify a supported guidance fallback");
+  }
+
+  const fallback = getAiGamePlayerSystemGuidanceFallbackContract(input.fallbackId);
+
+  if (fallback.source !== input.source) {
+    throw new Error("fallbackId must match the guidance cue source");
+  }
+
+  if (
+    !Number.isInteger(input.maxPayloadBytes) ||
+    input.maxPayloadBytes < 1 ||
+    input.maxPayloadBytes > AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_PAYLOAD_BYTES
+  ) {
+    throw new Error(
+      `maxPayloadBytes must be between 1 and ${AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_PAYLOAD_BYTES}`,
+    );
+  }
+
+  if (
+    !Number.isInteger(input.maxOccurrencesPerMinute) ||
+    input.maxOccurrencesPerMinute < 1 ||
+    input.maxOccurrencesPerMinute >
+      AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_OCCURRENCES_PER_MINUTE
+  ) {
+    throw new Error(
+      `maxOccurrencesPerMinute must be between 1 and ${AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_OCCURRENCES_PER_MINUTE}`,
+    );
+  }
+
+  return Object.freeze({
+    cueId: input.cueId,
+    contractVersion:
+      input.contractVersion ?? AI_GAME_PLAYER_SYSTEM_CONTRACT_VERSION,
+    featureFlagId: AI_GAME_PLAYER_SYSTEM_GUIDANCE_NFR_FEATURE_FLAG_ID,
+    priority: input.priority,
+    source: input.source,
+    fallbackId: input.fallbackId,
+    maxPayloadBytes: input.maxPayloadBytes,
+    maxOccurrencesPerMinute: input.maxOccurrencesPerMinute,
+  });
 }
 
 export function isAiGamePlayerSystemPreferenceKind(

@@ -86,6 +86,19 @@ Use `createAiGamePlayerSystemSession()`,
 contracts intentionally contain no account identifiers, credentials, or raw
 player telemetry.
 
+### Guidance cue contracts
+
+Guidance cues reuse the core alert-priority vocabulary while adding explicit
+multimodal fallback identifiers and bounded delivery assumptions under
+`isekai.player-system.guidance-nfr.enabled`:
+
+- `createAiGamePlayerSystemGuidanceCue()` validates cue source/fallback pairs.
+- `maxPayloadBytes` is capped at 4,096 bytes and
+  `maxOccurrencesPerMinute` is capped at 30 to make client performance
+  assumptions machine-checkable.
+- Voice, narration, and speech-capture failures map to touch/text summaries,
+  live-region status copy, and visible manual actions respectively.
+
 ## Adaptive mission contracts
 
 Adaptive System missions are versioned, dependency-free shared contracts under
@@ -163,6 +176,7 @@ npm run pack:check
 - `ai.game.npc-gossip.lifecycle.enabled`
 - `isekai.player-system.quiet-measure.enabled`
 - `isekai.player-system.core.enabled`
+- `isekai.player-system.guidance-nfr.enabled`
 - `isekai.player-system.identity.enabled`
 - `isekai.training.institutions.enabled`
 - `isekai.training.academies.enabled`
