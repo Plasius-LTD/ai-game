@@ -4,6 +4,7 @@ export * from "./missions.js";
 export * from "./identity.js";
 export * from "./observed-events.js";
 export * from "./mcc-guidance.js";
+export * from "./tutorial.js";
 
 export interface AiPackageDescriptor {
   readonly packageName: string;

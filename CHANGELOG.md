@@ -6,7 +6,8 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
-  - (placeholder)
+  - Added versioned tutorial-step, progression-state, prerequisite-marker, contextual-trigger, and replay metadata contracts under `isekai.player-system.tutorial.enabled`.
+  - Added immutable tutorial-track factories with stage, combat-safety, collection-bound, and reference validation.
 
 - **Changed**
   - (placeholder)
