@@ -13,3 +13,4 @@
 - [ADR-0011: Player System core contract boundary](./adr-0011-player-system-core-contract-boundary.md)
 - [ADR-0012: Identity projection and target-classification contract boundary](./adr-0012-identity-projection-contract-boundary.md)
 - [ADR-0013: Adaptive mission contract boundary](./adr-0013-adaptive-mission-contract-boundary.md)
+- [ADR-0014: Player System guidance cue contract boundary](./adr-0014-player-system-guidance-cue-contract-boundary.md)
