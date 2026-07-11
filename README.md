@@ -232,6 +232,28 @@ npm run test:coverage
 npm run pack:check
 ```
 
+## Apprenticeship handoff contracts
+
+The apprenticeship bridge is enabled by `isekai.training.apprenticeship.enabled`
+and keeps authority separated across the Player System, training, and crafting
+contexts.
+
+- `createAiGameApprenticeshipSponsorship` models the institution and sponsor
+  relationship using opaque subject identifiers and bounded scope codes.
+- `createAiGameApprenticeshipSupervision` models direct, delegated, or milestone
+  supervision and its checkpoints.
+- `createAiGameApprenticeshipReadiness` carries trust, MCC track, and prerequisite
+  evidence. A `ready` record cannot contain unmet prerequisites.
+- `createAiGameApprenticeshipHandoff` emits request-only payloads for
+  `spellcraft-system`, `item-crafting-system`, or `dungeon-crafting-system`,
+  and only accepts a `ready` readiness state.
+
+The Player System may guide and route a request, but the target system remains
+authoritative for validation, authorization, execution, and outcome. Handoff
+payloads contain no secrets or hidden System state. See
+[ADR-0018](./docs/adrs/adr-0018-apprenticeship-handoff-contract-boundary.md)
+for the boundary and rollback rules.
+
 ## Feature flags
 
 - `ai.game.event-recorder.contracts.enabled`
@@ -250,6 +272,7 @@ npm run pack:check
 - `isekai.training.institutions.enabled`
 - `isekai.training.academies.enabled`
 - `isekai.training.martial.enabled`
+- `isekai.training.apprenticeship.enabled`
 
 ## Governance
 
