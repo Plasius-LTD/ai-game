@@ -150,6 +150,29 @@ The growth-direction vocabulary is validated through the published
 `@plasius/training` authority package. MCC feasibility, spell grammar, risk
 validation, and state mutation remain outside `@plasius/ai-game`.
 
+## Tutorial contracts
+
+Tutorial contracts provide dormant, contextual Player System coaching under
+`isekai.player-system.tutorial.enabled`:
+
+- `AiGameTutorialStep` describes a per-action capability, canonical evolution
+  stage, trigger kinds, prerequisite markers, replayability, and combat-safe
+  presentation.
+- `AiGameTutorialProgressionState` records active, dormant, completed, and
+  declined state together with completed steps, refusal count, replay count,
+  and trigger/replay timestamps.
+- `AiGameTutorialPrerequisite` defines bounded markers for school access,
+  apprenticeship, academy admission, guild standing, divine progression, and
+  spellcraft readiness without becoming the authority for those systems.
+- `AiGameTutorialTrigger` supports awakening, first-action, explicit-request,
+  and progression-gated resurfacing.
+- `createAiGameTutorialTrack()` validates all step, prerequisite, trigger, and
+  progression references and freezes the complete transport payload.
+
+Tutorial tracks are foregrounded for first contact, dormant by default after
+onboarding, replayable after unlock, and reduced to safe cues during active
+combat unless the player explicitly enters a safe tutorial scenario.
+
 ## Quiet Measure contracts
 
 The Quiet Measure surface is intentionally structured as a hidden-runtime contract, not a turnkey morality meter.
@@ -221,6 +244,7 @@ npm run pack:check
 - `isekai.player-system.core.enabled`
 - `isekai.player-system.guidance-nfr.enabled`
 - `isekai.player-system.mcc-guidance.enabled`
+- `isekai.player-system.tutorial.enabled`
 - `isekai.player-system.identity.enabled`
 - `isekai.player-system.logs.enabled`
 - `isekai.training.institutions.enabled`
