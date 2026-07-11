@@ -15,6 +15,10 @@ import {
   createAiGamePlayerSystemSession,
   getAiGamePlayerSystemFocusModeContract,
   getAiGamePlayerSystemModuleContract,
+  getAiGamePlayerSystemGuidanceFallbackContract,
+  isAiGamePlayerSystemGuidanceCueSource,
+  isAiGamePlayerSystemGuidanceFallbackBehavior,
+  isAiGamePlayerSystemGuidanceFallbackId,
   isAiGamePlayerSystemConfidenceBand,
   isAiGamePlayerSystemModule,
   resolveAiGamePlayerSystemConfidenceBand,
@@ -106,6 +110,58 @@ describe("Player System shared contracts", () => {
           AI_GAME_PLAYER_SYSTEM_GUIDANCE_CUE_MAX_OCCURRENCES_PER_MINUTE + 1,
       }),
     ).toThrow("maxOccurrencesPerMinute must be between 1 and 30");
+  });
+
+  it("guards guidance metadata and rejects unsupported contracts", () => {
+    expect(isAiGamePlayerSystemGuidanceCueSource("voice")).toBe(true);
+    expect(isAiGamePlayerSystemGuidanceCueSource("keyboard")).toBe(false);
+    expect(isAiGamePlayerSystemGuidanceFallbackId("voice-unavailable")).toBe(true);
+    expect(isAiGamePlayerSystemGuidanceFallbackId("unknown")).toBe(false);
+    expect(isAiGamePlayerSystemGuidanceFallbackBehavior("status-copy-and-live-region")).toBe(
+      true,
+    );
+    expect(isAiGamePlayerSystemGuidanceFallbackBehavior("silent")).toBe(false);
+    expect(getAiGamePlayerSystemGuidanceFallbackContract("voice-unavailable")).toMatchObject({
+      source: "voice",
+      behavior: "touch-controls-and-text-summary",
+    });
+
+    expect(() =>
+      getAiGamePlayerSystemGuidanceFallbackContract("unknown" as "voice-unavailable"),
+    ).toThrow("fallbackId must identify a supported guidance fallback");
+
+    expect(() =>
+      createAiGamePlayerSystemGuidanceCue({
+        cueId: "invalid-priority",
+        priority: "urgent" as "normal",
+        source: "voice",
+        fallbackId: "voice-unavailable",
+        maxPayloadBytes: 1024,
+        maxOccurrencesPerMinute: 1,
+      }),
+    ).toThrow("priority must be a supported Player System alert priority");
+
+    expect(() =>
+      createAiGamePlayerSystemGuidanceCue({
+        cueId: "invalid-source",
+        priority: "normal",
+        source: "keyboard" as "voice",
+        fallbackId: "voice-unavailable",
+        maxPayloadBytes: 1024,
+        maxOccurrencesPerMinute: 1,
+      }),
+    ).toThrow("source must be a supported guidance cue source");
+
+    expect(() =>
+      createAiGamePlayerSystemGuidanceCue({
+        cueId: "invalid-fallback",
+        priority: "normal",
+        source: "voice",
+        fallbackId: "unknown" as "voice-unavailable",
+        maxPayloadBytes: 1024,
+        maxOccurrencesPerMinute: 1,
+      }),
+    ).toThrow("fallbackId must identify a supported guidance fallback");
   });
 
   it("exposes the inherited feature flag and versioned focus contracts", () => {
