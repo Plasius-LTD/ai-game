@@ -7,6 +7,7 @@ import {
   createAiGameObservedEvent,
   createAiGameObservedEventHighlightSummary,
   createAiGameObservedEventRecencyWindow,
+  assertAiGameObservedEventLogContractVersion,
   isAiGameGossipExportAudience,
   isAiGameObservedEventKind,
   isAiGameObservedEventSignificance,
@@ -178,5 +179,195 @@ describe("observed event and gossip export contracts", () => {
         visibility: "private",
       }),
     ).toThrow("summary must not contain control characters");
+  });
+
+  it("covers the defensive validation boundary", () => {
+    expect(() => assertAiGameObservedEventLogContractVersion("2.0")).toThrow(
+      "contractVersion must be 1.0",
+    );
+    expect(() =>
+      createAiGameObservedEvent({
+        ...eventOne,
+        eventId: " ",
+      }),
+    ).toThrow("eventId must be a non-empty string");
+    expect(() =>
+      createAiGameObservedEvent({
+        ...eventOne,
+        occurredAtIso: "not-a-date",
+      }),
+    ).toThrow("occurredAtIso must be an ISO-8601 timestamp");
+    expect(() =>
+      createAiGameObservedEvent({
+        ...eventOne,
+        summary: "x".repeat(501),
+      }),
+    ).toThrow("summary must be 500 characters or fewer");
+    expect(() =>
+      createAiGameObservedEvent({
+        ...eventOne,
+        kind: "unknown",
+      }),
+    ).toThrow("kind must be one of");
+    expect(() =>
+      createAiGameObservedEvent({
+        ...eventOne,
+        source: "database",
+      }),
+    ).toThrow("source must be one of");
+    expect(() =>
+      createAiGameObservedEvent({
+        ...eventOne,
+        significance: "certain",
+      }),
+    ).toThrow("significance must be one of");
+    expect(() =>
+      createAiGameObservedEvent({
+        ...eventOne,
+        visibility: "global",
+      }),
+    ).toThrow("visibility must be one of");
+    expect(() =>
+      createAiGameObservedEvent({
+        ...eventOne,
+        tags: Array.from({ length: 21 }, (_, index) => `tag-${index}`),
+      }),
+    ).toThrow("tags must contain 20 items or fewer");
+    expect(() =>
+      createAiGameObservedEvent({
+        ...eventOne,
+        tags: ["x".repeat(65)],
+      }),
+    ).toThrow("tags[0] must be 64 characters or fewer");
+  });
+
+  it("rejects invalid recency, highlight, and export boundaries", () => {
+    expect(() =>
+      createAiGameObservedEventRecencyWindow({
+        windowId: "window-invalid",
+        startsAtIso: "2026-07-11T09:00:00.000Z",
+        endsAtIso: "2026-07-11T11:00:00.000Z",
+        events: [
+          createAiGameObservedEvent({
+            ...eventOne,
+            eventId: "event-outside",
+            occurredAtIso: "2026-07-11T12:00:00.000Z",
+          }),
+        ],
+      }),
+    ).toThrow("must occur inside the recency window");
+
+    expect(() =>
+      createAiGameObservedEventRecencyWindow({
+        windowId: "window-too-large",
+        startsAtIso: "2026-07-11T09:00:00.000Z",
+        endsAtIso: "2026-07-11T11:00:00.000Z",
+        events: Array.from({ length: 101 }, (_, index) => ({
+          ...eventOne,
+          eventId: `event-${index}`,
+        })),
+      }),
+    ).toThrow("events must contain 100 items or fewer");
+
+    expect(() =>
+      createAiGameObservedEventHighlightSummary({
+        contractVersion: "2.0",
+        summaryId: "summary-invalid",
+        windowId: "window-1",
+        title: "Invalid version",
+        summary: "Invalid version",
+        significance: "notable",
+        eventIds: [eventOne.eventId],
+      }),
+    ).toThrow("contractVersion must be 1.0");
+    expect(() =>
+      createAiGameObservedEventHighlightSummary({
+        summaryId: "summary-invalid",
+        windowId: "window-1",
+        title: "Invalid significance",
+        summary: "Invalid significance",
+        significance: "certain",
+        eventIds: [eventOne.eventId],
+      }),
+    ).toThrow("significance must be one of");
+    expect(() =>
+      createAiGameObservedEventHighlightSummary({
+        summaryId: "summary-invalid",
+        windowId: "window-1",
+        title: "Empty references",
+        summary: "Empty references",
+        significance: "notable",
+        eventIds: [],
+      }),
+    ).toThrow("eventIds must contain at least one event id");
+
+    const window = createAiGameObservedEventRecencyWindow({
+      windowId: "window-1",
+      startsAtIso: "2026-07-11T09:00:00.000Z",
+      endsAtIso: "2026-07-11T11:00:00.000Z",
+      events: [eventOne],
+    });
+    const wrongWindowHighlight = createAiGameObservedEventHighlightSummary({
+      summaryId: "summary-wrong-window",
+      windowId: "window-2",
+      title: "Wrong window",
+      summary: "Wrong window",
+      significance: "notable",
+      eventIds: [eventOne.eventId],
+    });
+    expect(() =>
+      createAiGameGossipExport({
+        exportId: "gossip-invalid",
+        exportedAtIso: "2026-07-11T11:05:00.000Z",
+        audience: "public",
+        sourceWindow: window,
+        highlights: [wrongWindowHighlight],
+      }),
+    ).toThrow("highlight windowId must match sourceWindow windowId");
+    expect(() =>
+      createAiGameGossipExport({
+        contractVersion: "2.0",
+        exportId: "gossip-invalid",
+        exportedAtIso: "2026-07-11T11:05:00.000Z",
+        audience: "public",
+        sourceWindow: window,
+        highlights: [],
+      }),
+    ).toThrow("contractVersion must be 1.0");
+    expect(() =>
+      createAiGameGossipExport({
+        exportId: "gossip-invalid",
+        exportedAtIso: "2026-07-11T11:05:00.000Z",
+        audience: "admin",
+        sourceWindow: window,
+        highlights: [],
+      }),
+    ).toThrow("audience must be one of");
+    expect(() =>
+      createAiGameGossipExport({
+        exportId: "gossip-duplicate-highlights",
+        exportedAtIso: "2026-07-11T11:05:00.000Z",
+        audience: "public",
+        sourceWindow: window,
+        highlights: [
+          createAiGameObservedEventHighlightSummary({
+            summaryId: "same-summary",
+            windowId: window.windowId,
+            title: "Duplicate one",
+            summary: "Duplicate one",
+            significance: "notable",
+            eventIds: [eventOne.eventId],
+          }),
+          createAiGameObservedEventHighlightSummary({
+            summaryId: "same-summary",
+            windowId: window.windowId,
+            title: "Duplicate two",
+            summary: "Duplicate two",
+            significance: "notable",
+            eventIds: [eventOne.eventId],
+          }),
+        ],
+      }),
+    ).toThrow("highlights must not contain duplicate values");
   });
 });
