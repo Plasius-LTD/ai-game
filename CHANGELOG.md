@@ -7,6 +7,20 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 
 - **Added**
   - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.5.0] - 2026-07-11
+
+- **Added**
+  - (placeholder)
   - Added bounded Player System guidance cue contracts with explicit alert
     priority, multimodal fallback identifiers, payload-size, and frequency
     metadata under `isekai.player-system.guidance-nfr.enabled`.
@@ -199,3 +213,4 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 [0.2.0]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.2.0
 [0.3.0]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.3.0
 [0.4.0]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.4.0
+[0.5.0]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.5.0
