@@ -119,6 +119,35 @@ describe("guild quest contracts", () => {
     expect(Object.isFrozen(payload.quests)).toBe(true);
   });
 
+  it("applies safe defaults for optional progress, expiry, and annotation fields", () => {
+    const quest = createAiGameGuildQuest({
+      ...activeQuestInput,
+      systemAnnotations: undefined,
+      guildTruth: {
+        ...activeQuestInput.guildTruth,
+        progress: {
+          ...activeQuestInput.guildTruth.progress,
+          objectives: [
+            {
+              ...activeQuestInput.guildTruth.progress.objectives[0],
+              currentCount: undefined,
+              reasonCodes: undefined,
+            },
+          ],
+        },
+        rewardPreview: {
+          ...activeQuestInput.guildTruth.rewardPreview,
+          expiresAtIso: undefined,
+        },
+      },
+    });
+
+    expect(quest.guildTruth.progress.objectives[0]?.currentCount).toBe(0);
+    expect(quest.guildTruth.progress.objectives[0]?.reasonCodes).toEqual([]);
+    expect(quest.guildTruth.rewardPreview.expiresAtIso).toBeNull();
+    expect(quest.systemAnnotations.recommendation).toBe("optional");
+  });
+
   it("requires failure details for failed quests and validates progress bounds", () => {
     expect(() =>
       createAiGameGuildQuest({
