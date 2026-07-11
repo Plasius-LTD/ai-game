@@ -6,7 +6,10 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
-  - (placeholder)
+  - Added versioned guild-quest contract and synchronization payloads under
+    `isekai.player-system.guild-quests.enabled`, including guild-owned
+    progress, failure, preview-only reward, and advisory System annotation
+    boundaries.
 
 - **Changed**
   - (placeholder)

@@ -6,6 +6,7 @@ export * from "./observed-events.js";
 export * from "./mcc-guidance.js";
 export * from "./tutorial.js";
 export * from "./apprenticeship-handoffs.js";
+export * from "./guild-quests.js";
 
 export interface AiPackageDescriptor {
   readonly packageName: string;
