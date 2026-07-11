@@ -6,6 +6,20 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.6.2] - 2026-07-11
+
+- **Added**
   - Added versioned tutorial-step, progression-state, prerequisite-marker, contextual-trigger, and replay metadata contracts under `isekai.player-system.tutorial.enabled`.
   - Added immutable tutorial-track factories with stage, combat-safety, collection-bound, and reference validation.
 
@@ -247,3 +261,4 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 [0.5.0]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.5.0
 [0.6.0]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.0
 [0.6.1]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.1
+[0.6.2]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.2
