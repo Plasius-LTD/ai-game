@@ -1,6 +1,6 @@
 # @plasius/ai-game
 
-Game-domain AI contracts for player action validation, adaptive System missions, NPC actions, gossip, observed event logs, Quiet Measure mission probes, Judgment disclosure surfaces, and Player System-readable training recommendations.
+Game-domain AI contracts for player action validation, adaptive System missions, NPC actions, gossip, observed event logs, Quiet Measure mission probes, Judgment disclosure surfaces, MCC guidance, and Player System-readable training recommendations.
 
 ## Scope
 
@@ -128,6 +128,28 @@ Use `createAiGameMissionDefinition()`,
 surface intentionally avoids raw telemetry, progression writes, and
 authority-owned tuning data.
 
+## MCC guidance contracts
+
+MCC guidance contracts provide a bounded Player System bridge under
+`isekai.player-system.mcc-guidance.enabled`:
+
+- `AiGameMccFocusTarget` carries a declared `internalized`, `externalized`, or
+  `hybrid` growth direction with bounded mission influence.
+- `AiGameMccReadinessState` exposes `stable`, `pressured`, or `restricted`
+  readiness plus explicit thermal, fatigue, chaos-pressure, target-burden,
+  stage-gate, and death-impairment warnings.
+- `AiGameSpellcraftRecommendation` describes training, material,
+  social-prerequisite, or refinement guidance without becoming an authority
+  write.
+- `AiGameSpellcraftAdvisory` is explicitly `preview-only` and points to the
+  `spellcraft-system` as the authoritative owner for feasibility and authoring.
+- `createAiGameMccGuidanceSnapshot()` validates references, bounds collection
+  sizes, and freezes the complete payload for transport.
+
+The growth-direction vocabulary is validated through the published
+`@plasius/training` authority package. MCC feasibility, spell grammar, risk
+validation, and state mutation remain outside `@plasius/ai-game`.
+
 ## Quiet Measure contracts
 
 The Quiet Measure surface is intentionally structured as a hidden-runtime contract, not a turnkey morality meter.
@@ -198,6 +220,7 @@ npm run pack:check
 - `isekai.player-system.quiet-measure.enabled`
 - `isekai.player-system.core.enabled`
 - `isekai.player-system.guidance-nfr.enabled`
+- `isekai.player-system.mcc-guidance.enabled`
 - `isekai.player-system.identity.enabled`
 - `isekai.player-system.logs.enabled`
 - `isekai.training.institutions.enabled`
