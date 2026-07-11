@@ -399,6 +399,15 @@ describe("guild quest contracts", () => {
         guildId: "guild-1",
         authorityRevision: 4,
         syncedAtIso: "2026-07-11T13:05:00.000Z",
+        removedQuestIds: ["quest-old", "quest-old"],
+      }),
+    ).toThrow("removedQuestIds must be unique within a sync payload");
+
+    expect(() =>
+      createAiGameGuildQuestSyncPayload({
+        guildId: "guild-1",
+        authorityRevision: 4,
+        syncedAtIso: "2026-07-11T13:05:00.000Z",
       }),
     ).toThrow("sync payload must contain quests or removedQuestIds");
   });

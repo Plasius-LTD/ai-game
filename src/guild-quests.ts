@@ -520,6 +520,9 @@ export function createAiGameGuildQuestSyncPayload(
     input.removedQuestIds,
     "removedQuestIds",
   );
+  if (new Set(removedQuestIds).size !== removedQuestIds.length) {
+    throw new Error("removedQuestIds must be unique within a sync payload");
+  }
   if (quests.length === 0 && removedQuestIds.length === 0) {
     throw new Error("sync payload must contain quests or removedQuestIds");
   }
