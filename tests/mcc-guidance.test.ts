@@ -92,6 +92,50 @@ describe("MCC guidance contracts", () => {
     ).toThrow("influenceWeight must be between 0 and 1");
   });
 
+  it("rejects unsupported focus, warning, readiness, and contract values", () => {
+    expect(() =>
+      createAiGameMccFocusTarget({
+        ...focusTarget,
+        targetId: " ",
+      }),
+    ).toThrow("targetId must be a non-empty string");
+    expect(() =>
+      createAiGameMccFocusTarget({
+        ...focusTarget,
+        growthDirection: "unknown" as "internalized",
+      }),
+    ).toThrow("growthDirection must be a supported MCC growth direction");
+    expect(() =>
+      createAiGameMccFocusTarget({
+        ...focusTarget,
+        priority: "tertiary" as "primary",
+      }),
+    ).toThrow("priority must be a supported MCC focus priority");
+    expect(() =>
+      createAiGameMccFocusTarget({
+        ...focusTarget,
+        contractVersion: "2.0" as "1.0",
+      }),
+    ).toThrow("contractVersion must be 1.0");
+
+    expect(() =>
+      createAiGameMccWarning({
+        warningId: "invalid-kind",
+        kind: "latency" as "thermal",
+        state: "advisory",
+        summary: "Invalid warning.",
+      }),
+    ).toThrow("kind must be a supported MCC warning kind");
+    expect(() =>
+      createAiGameMccWarning({
+        warningId: "invalid-state",
+        kind: "thermal",
+        state: "clear",
+        summary: "Invalid warning.",
+      }),
+    ).toThrow("state must be an active MCC warning state");
+  });
+
   it("derives a bounded readiness warning state and rejects inconsistent severity", () => {
     expect(readiness).toMatchObject({
       band: "pressured",
@@ -158,6 +202,86 @@ describe("MCC guidance contracts", () => {
     expect(isAiGameSpellcraftVerdict("approved")).toBe(false);
   });
 
+  it("rejects unsupported readiness, recommendation, and advisory values", () => {
+    expect(() =>
+      createAiGameMccReadinessState({
+        readinessId: "invalid-band",
+        band: "unknown" as "stable",
+        warnings: [],
+      }),
+    ).toThrow("band must be a supported MCC readiness band");
+    expect(() =>
+      createAiGameMccReadinessState({
+        readinessId: "invalid-warning-state",
+        band: "stable",
+        warningState: "unknown" as "clear",
+        warnings: [],
+      }),
+    ).toThrow("warningState must be a supported MCC warning state");
+    expect(() =>
+      createAiGameSpellcraftRecommendation({
+        ...recommendation,
+        kind: "combat" as "training",
+      }),
+    ).toThrow("kind must be a supported spellcraft recommendation kind");
+    expect(() =>
+      createAiGameSpellcraftRecommendation({
+        ...recommendation,
+        readinessBand: "unknown" as "pressured",
+      }),
+    ).toThrow("readinessBand must be a supported MCC readiness band");
+
+    const advisoryInput = {
+      advisoryId: "invalid-advisory",
+      recommendationId: recommendation.recommendationId,
+      verdict: "conditional",
+      targetMode: "single-target",
+      complexity: "medium",
+      chaosPressure: "elevated",
+      fatigueState: "strained",
+      readinessBand: readiness.band,
+      prerequisiteCodes: [],
+      warningCodes: [],
+      summary: "Advisory.",
+    } as const;
+    expect(() =>
+      createAiGameSpellcraftAdvisory({
+        ...advisoryInput,
+        verdict: "approved" as "conditional",
+      }),
+    ).toThrow("verdict must be a supported spellcraft verdict");
+    expect(() =>
+      createAiGameSpellcraftAdvisory({
+        ...advisoryInput,
+        targetMode: "cone" as "single-target",
+      }),
+    ).toThrow("targetMode must be a supported spellcraft target mode");
+    expect(() =>
+      createAiGameSpellcraftAdvisory({
+        ...advisoryInput,
+        complexity: "extreme" as "medium",
+      }),
+    ).toThrow("complexity must be a supported spellcraft complexity");
+    expect(() =>
+      createAiGameSpellcraftAdvisory({
+        ...advisoryInput,
+        chaosPressure: "critical" as "elevated",
+      }),
+    ).toThrow("chaosPressure must be a supported spellcraft chaos pressure");
+    expect(() =>
+      createAiGameSpellcraftAdvisory({
+        ...advisoryInput,
+        fatigueState: "overloaded" as "strained",
+      }),
+    ).toThrow("fatigueState must be a supported spellcraft fatigue state");
+    expect(() =>
+      createAiGameSpellcraftAdvisory({
+        ...advisoryInput,
+        readinessBand: "unknown" as "pressured",
+      }),
+    ).toThrow("readinessBand must be a supported MCC readiness band");
+  });
+
   it("builds an immutable guidance snapshot and validates focus references", () => {
     const snapshot = createAiGameMccGuidanceSnapshot({
       guidanceId: "guidance-1",
@@ -199,5 +323,45 @@ describe("MCC guidance contracts", () => {
         advisory: snapshot.advisory,
       }),
     ).toThrow("focusTargetId must reference a supplied focus target");
+
+    expect(() =>
+      createAiGameMccGuidanceSnapshot({
+        guidanceId: "empty-focus",
+        focusTargets: [],
+        readiness,
+        recommendations: [recommendation],
+        advisory: snapshot.advisory,
+      }),
+    ).toThrow("focusTargets must contain between 1 and 3 targets");
+    expect(() =>
+      createAiGameMccGuidanceSnapshot({
+        guidanceId: "empty-recommendations",
+        focusTargets: [focusTarget],
+        readiness,
+        recommendations: [],
+        advisory: snapshot.advisory,
+      }),
+    ).toThrow("recommendations must contain between 1 and 5 items");
+    expect(() =>
+      createAiGameMccGuidanceSnapshot({
+        guidanceId: "duplicate-focus",
+        focusTargets: [focusTarget, focusTarget],
+        readiness,
+        recommendations: [recommendation],
+        advisory: snapshot.advisory,
+      }),
+    ).toThrow("focusTargets must have unique targetId values");
+    expect(() =>
+      createAiGameMccGuidanceSnapshot({
+        guidanceId: "missing-recommendation",
+        focusTargets: [focusTarget],
+        readiness,
+        recommendations: [recommendation],
+        advisory: {
+          ...snapshot.advisory,
+          recommendationId: "unknown-recommendation",
+        },
+      }),
+    ).toThrow("advisory recommendationId must reference a supplied recommendation");
   });
 });
