@@ -172,6 +172,27 @@ Tutorial contracts provide dormant, contextual Player System coaching under
 Tutorial tracks are foregrounded for first contact, dormant by default after
 onboarding, replayable after unlock, and reduced to safe cues during active
 combat unless the player explicitly enters a safe tutorial scenario.
+## Guild-quest synchronization contracts
+
+Guild quests are externally authored by guild authorities and synchronized
+into the Player System under `isekai.player-system.guild-quests.enabled`.
+
+- `AiGameGuildQuestContract.guildTruth` owns the guild contract identity,
+  status, objective progress, failure details, authority revision, and
+  preview-only reward data.
+- `AiGameGuildQuestContract.systemAnnotations` is advisory only. It contains
+  recommendation, synergy, linked-mission, and reason-code metadata without
+  guild authority fields or reward grants.
+- `AiGameGuildQuestSyncPayload` carries revisioned quest upserts and explicit
+  tombstones so consumers can remove quests without treating a partial sync as
+  an authoritative empty set.
+- Reward previews are not grants. The guild remains the authority for claim
+  eligibility, rewards, rank gates, consequences, and final resolution.
+
+Use `createAiGameGuildQuest()` and
+`createAiGameGuildQuestSyncPayload()` at package boundaries. The factories
+validate progress bounds, failure-state requirements, unique identifiers,
+guild ownership, and sync revision metadata, and return frozen payloads.
 
 ## Quiet Measure contracts
 
@@ -269,6 +290,7 @@ for the boundary and rollback rules.
 - `isekai.player-system.tutorial.enabled`
 - `isekai.player-system.identity.enabled`
 - `isekai.player-system.logs.enabled`
+ - `isekai.player-system.guild-quests.enabled`
 - `isekai.training.institutions.enabled`
 - `isekai.training.academies.enabled`
 - `isekai.training.martial.enabled`
