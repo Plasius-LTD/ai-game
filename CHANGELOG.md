@@ -6,6 +6,20 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 ## [Unreleased]
 
 - **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.6.4] - 2026-07-12
+
+- **Added**
   - Added versioned guild-quest contract and synchronization payloads under
     `isekai.player-system.guild-quests.enabled`, including guild-owned
     progress, failure, preview-only reward, and advisory System annotation
@@ -281,3 +295,4 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 [0.6.1]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.1
 [0.6.2]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.2
 [0.6.3]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.3
+[0.6.4]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.4
