@@ -9,6 +9,20 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
   - (placeholder)
 
 - **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.6.6] - 2026-08-30
+
+- **Added**
+  - (placeholder)
+
+- **Changed**
   - Restored exact-main npm publication on a GitHub-hosted runner through
     short-lived OIDC, with an enforced Node/npm runtime and no long-lived
     write-token fallback.
@@ -317,3 +331,4 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 [0.6.3]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.3
 [0.6.4]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.4
 [0.6.5]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.5
+[0.6.6]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.6
