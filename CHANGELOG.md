@@ -15,6 +15,7 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
   - (placeholder)
 
 - **Security**
+  - Pinned patched transitive npm dependencies to clear the current audit baseline.
   - (placeholder)
 
 ## [0.6.5] - 2026-07-12
