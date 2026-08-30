@@ -19,3 +19,4 @@
 - [ADR-0016: Observed event log and gossip export contract boundary](./adr-0016-observed-event-log-and-gossip-export-contract-boundary.md)
 - [ADR-0017: Tutorial contract boundary](./adr-0017-tutorial-contract-boundary.md)
 - [ADR-0018: Apprenticeship handoff contract boundary](./adr-0018-apprenticeship-handoff-contract-boundary.md)
+- [ADR-0020: Hosted OIDC Package Publication](./adr-0020-hosted-oidc-package-publication.md)
