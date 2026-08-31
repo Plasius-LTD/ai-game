@@ -17,6 +17,20 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 - **Security**
   - (placeholder)
 
+## [0.6.7] - 2026-08-31
+
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
 ## [0.6.6] - 2026-08-30
 
 - **Added**
@@ -332,3 +346,4 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 [0.6.4]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.4
 [0.6.5]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.5
 [0.6.6]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.6
+[0.6.7]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.7
