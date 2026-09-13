@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/)**, and this project adheres to **[Semantic Versioning](https://semver.org/spec/v2.0.0.html)**.
 ## [Unreleased]
 
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.6.8] - 2026-09-13
+
 ### Changed
 - Consume `@plasius/training` 1.0.2 and refresh compatible npm dependencies while preserving AI-game’s existing training rollout flag identifiers.
 
@@ -352,3 +366,4 @@ The format is based on **[Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 [0.6.5]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.5
 [0.6.6]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.6
 [0.6.7]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.7
+[0.6.8]: https://github.com/Plasius-LTD/ai-game/releases/tag/v0.6.8
