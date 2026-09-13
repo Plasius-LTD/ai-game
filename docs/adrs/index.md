@@ -20,3 +20,5 @@
 - [ADR-0017: Tutorial contract boundary](./adr-0017-tutorial-contract-boundary.md)
 - [ADR-0018: Apprenticeship handoff contract boundary](./adr-0018-apprenticeship-handoff-contract-boundary.md)
 - [ADR-0020: Hosted OIDC Package Publication](./adr-0020-hosted-oidc-package-publication.md)
+
+- [ADR 0021: Training upgrade rollout compatibility](adr-0021-training-upgrade-rollout-compatibility.md)
