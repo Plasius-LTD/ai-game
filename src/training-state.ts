@@ -1,7 +1,4 @@
 import {
-  TRAINING_ACADEMIES_FEATURE_FLAG_ID,
-  TRAINING_FEATURE_FLAG_ID,
-  TRAINING_MARTIAL_FEATURE_FLAG_ID,
   TRAINING_TRUST_MARKER_SOURCES,
   TRAINING_ACADEMIC_PROGRESS_STAGES,
   TRAINING_ACADEMY_ADMISSION_DECISIONS,
@@ -61,6 +58,14 @@ import {
   type TrainingTrustLevel,
 } from "@plasius/training";
 
+/** Existing AI-game rollout keys stay stable across training package upgrades. */
+export const AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID =
+  "isekai.training.institutions.enabled" as const;
+export const AI_GAME_TRAINING_ACADEMIES_FEATURE_FLAG_ID =
+  "isekai.training.academies.enabled" as const;
+export const AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID =
+  "isekai.training.martial.enabled" as const;
+
 export {
   isMccExpressionTrack,
   isTrainingAcademicProgressStage as isAiGameTrainingAcademicProgressStage,
@@ -78,9 +83,6 @@ export {
   createTrainingAcademyAdmission as createAiGameTrainingAcademyAdmission,
   createTrainingSchoolProgression as createAiGameTrainingSchoolProgression,
   createTrainingTrackSelection as createAiGameTrainingTrackSelection,
-  TRAINING_FEATURE_FLAG_ID as AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID,
-  TRAINING_ACADEMIES_FEATURE_FLAG_ID as AI_GAME_TRAINING_ACADEMIES_FEATURE_FLAG_ID,
-  TRAINING_MARTIAL_FEATURE_FLAG_ID as AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID,
   TRAINING_TRUST_MARKER_SOURCES as AI_GAME_TRAINING_TRUST_MARKER_SOURCES,
   TRAINING_ACADEMIC_PROGRESS_STAGES as AI_GAME_TRAINING_ACADEMIC_PROGRESS_STAGES,
   TRAINING_ACADEMY_ADMISSION_DECISIONS as AI_GAME_TRAINING_ACADEMY_ADMISSION_DECISIONS,

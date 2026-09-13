@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TRAINING_FEATURE_FLAG_ID } from "@plasius/training";
 
 import {
   AI_GAME_ENV_PREFIX,
@@ -103,6 +104,19 @@ describe("@plasius/ai-game", () => {
     expect(AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID).toBe(
       "isekai.training.martial.enabled",
     );
+  });
+
+  it("preserves published rollout keys while consuming training 1.x", () => {
+    expect(TRAINING_FEATURE_FLAG_ID).toBe("harmony.training.institutions.enabled");
+    expect([
+      AI_GAME_TRAINING_INSTITUTIONS_FEATURE_FLAG_ID,
+      AI_GAME_TRAINING_ACADEMIES_FEATURE_FLAG_ID,
+      AI_GAME_TRAINING_MARTIAL_FEATURE_FLAG_ID,
+    ]).toEqual([
+      "isekai.training.institutions.enabled",
+      "isekai.training.academies.enabled",
+      "isekai.training.martial.enabled",
+    ]);
   });
 
   it("exports training bridge metadata and validators", () => {

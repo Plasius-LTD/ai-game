@@ -48,6 +48,11 @@ import {
 
 The training surface intentionally reuses `@plasius/training` as the authority for institutions, trust tiers, and specialization tracks.
 
+The bridge consumes `@plasius/training` 1.x while retaining AI-game’s published
+`isekai.training.*` rollout keys. Direct training consumers use that package’s
+`harmony.training.*` keys. Updating this dependency does not migrate existing
+AI-game rollout configuration; see [ADR 0021](docs/adrs/adr-0021-training-upgrade-rollout-compatibility.md).
+
 - `AiGameTrainingState` re-exports the canonical progression record from `@plasius/training`.
 - `AiGameInstitutionEligibility` makes stage-gated institutional availability explicit for Player System consumers.
 - `AiGameTrainingTrustMarker` carries trust evidence without copying broader profile state.
