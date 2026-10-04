@@ -92,12 +92,12 @@
   },
   "overrides": {
     "esbuild": "^0.28.1",
-    "brace-expansion": "5.0.9",
+    "brace-expansion": "5.0.12",
     "nanoid": "3.3.18",
     "postcss": "8.5.26",
     "minimatch": "^10.2.1"
   },
   "dependencies": {
-    "@plasius/training": "^1.0.4"
+    "@plasius/training": "^1.0.5"
   }
 }
