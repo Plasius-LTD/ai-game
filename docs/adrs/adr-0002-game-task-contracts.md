@@ -22,6 +22,12 @@ The package now exports stable contracts for:
 
 `ai.game-agentic-workloads.enabled` is the primary feature gate for all task resolution decisions. Existing speech-feature flags are surfaced for cache behavior alignment but do not change the package boundary contract.
 
+Update for regression Task #82: the current exported workload snapshot key is
+`AI_GAME_FEATURE_FLAGS.workloads` (`ai.game.enabled`); the historical key above
+is not a runtime alias. ADR 0022 clarifies that unknown or malformed kinds always
+require review, including for system callers, and documents the current flag and
+rollback contract without renaming any public key.
+
 ## Consequences
 
 - Consumers receive a single point of contract for gameplay task risk classes and fallback paths.
