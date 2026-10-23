@@ -206,8 +206,8 @@ const AI_GAME_TASK_PROFILE_BY_KIND: Record<AiGameTaskKind, AiGameTaskProfile> = 
     keywords: ["feedback", "rating", "report", "score", "review", "complaint"],
   },
   unknown: {
-    riskClass: "low",
-    authorityBoundary: "deterministic",
+    riskClass: "high",
+    authorityBoundary: "operator-review",
     keywords: [""],
   },
 };
@@ -263,7 +263,7 @@ function isActorRole(role?: AiGameActorRole): AiGameActorRole {
 }
 
 function normalizeTaskKind(taskKind?: AiGameTaskKind): AiGameTaskKind | undefined {
-  if (!taskKind) {
+  if (taskKind === undefined) {
     return undefined;
   }
 
@@ -308,6 +308,14 @@ function resolveTaskDecision(
     return {
       decision: "allow",
       needsOperatorReview: false,
+    };
+  }
+
+  // A privileged caller still needs a recognized classification before execution.
+  if (taskKind === "unknown") {
+    return {
+      decision: "operator-review",
+      needsOperatorReview: true,
     };
   }
 

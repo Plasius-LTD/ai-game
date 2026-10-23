@@ -14,6 +14,31 @@ Game-domain AI contracts for player action validation, adaptive System missions,
 
 This package is part of the layered `@plasius/ai-*` package family. It exports canonical public contracts for adaptive System missions, world events, world-event ingestion, incident impact state, gossip topic projection, Quiet Measure hidden-runtime integration surfaces, and the Player System bridge layer that consumes `@plasius/training`.
 
+## Task classification safety
+
+`resolveAiGameTaskBatch()` requires operator review when task text is unclassified
+or the supplied `taskKind` is `unknown` or unsupported, including malformed decoded
+values such as `null`, an empty string, or a number. These requests have high
+risk, `authorityBoundary: "operator-review"`, `needsOperatorReview: true`, and
+the stable reason code `task-unknown-operator-review`. They appear in
+`reviewTaskIds`, never `allowedTaskIds`, even for system-originated requests.
+The batch audit returns `defer`, or `deny` if another task is blocked.
+
+An omitted (`undefined`) kind still uses the text classifier. A malformed
+explicit kind requires correction or external review; task text cannot turn it
+into an automatic approval. Recognized explicit kinds retain their existing
+meaning, including deterministic `npc-dialogue` and system handling of known
+review-bound tasks. Consumers must act on each task's decision and route review
+requests to their existing operator workflow. No automatic review completion or
+new authority-granting API is introduced.
+
+The existing `AI_GAME_FEATURE_FLAGS.workloads` snapshot key is `ai.game.enabled`.
+The consuming service supplies its remotely evaluated snapshot; missing or false
+state blocks all requests. The original Feature's historical
+`ai.game-agentic-workloads.enabled` name is not an alias for this runtime key.
+Disable the current key to stop workloads during rollback; do not restore
+automatic approval of unknown tasks. See [ADR 0022](docs/adrs/adr-0022-unknown-task-review-boundary.md).
+
 ## Install
 
 ```bash

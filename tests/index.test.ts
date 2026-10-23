@@ -1257,7 +1257,7 @@ describe("@plasius/ai-game", () => {
     expect(reviewOnly.audit.result).toBe("defer");
   });
 
-  it("falls back to unknown for malformed task kinds from decoded inputs", () => {
+  it("requires review for malformed task kinds from decoded inputs", () => {
     const result = resolveAiGameTaskBatch({
       actorRole: "player",
       featureFlags: {
@@ -1275,10 +1275,83 @@ describe("@plasius/ai-game", () => {
     expect(result.taskDecisions[0]).toMatchObject({
       taskId: "task-forward-kind",
       taskKind: "unknown",
-      authorityBoundary: "deterministic",
-      decision: "allow",
+      authorityBoundary: "operator-review",
+      decision: "operator-review",
+      needsOperatorReview: true,
+      reasonCodes: ["task-unknown-operator-review"],
     });
-    expect(result.allowedTaskIds).toEqual(["task-forward-kind"]);
+    expect(result.allowedTaskIds).toEqual([]);
+    expect(result.reviewTaskIds).toEqual(["task-forward-kind"]);
+    expect(result.audit.result).toBe("defer");
+  });
+
+  it.each(["player", "npc", "operator", "system"] as const)(
+    "requires review for unknown classifications from %s", (actorRole) => {
+      for (const taskText of ["Calculate a harmless weather forecast", "   "]) {
+        for (const taskKind of [undefined, "unknown"] as const) {
+          const result = resolveAiGameTaskBatch({
+            actorRole,
+            featureFlags: { [AI_GAME_FEATURE_FLAGS.workloads]: true },
+            requests: [{ taskId: "unclassified", taskText, taskKind }],
+          });
+          expect(result.allowedTaskIds).toEqual([]);
+          expect(result.reviewTaskIds).toEqual(["unclassified"]);
+          expect(result.taskDecisions[0]).toMatchObject({
+            taskKind: "unknown", riskClass: "high", authorityBoundary: "operator-review",
+            decision: "operator-review", needsOperatorReview: true,
+            reasonCodes: ["task-unknown-operator-review"],
+          });
+          expect(result.audit.result).toBe("defer");
+        }
+      }
+    },
+  );
+
+  it.each(["future-task-kind", "", " ", null, false, 0, 42, [], {}])(
+    "does not grant authority for malformed kind %j", (taskKind) => {
+      for (const actorRole of ["player", "npc", "operator", "system"] as const) {
+        for (const taskText of ["The guard says hello", "summon an npc action", "punish the faction"]) {
+          const result = resolveAiGameTaskBatch({
+            actorRole,
+            featureFlags: { [AI_GAME_FEATURE_FLAGS.workloads]: true },
+            requests: [{ taskId: "malformed", taskText, taskKind: taskKind as never }],
+          });
+          expect(result.allowedTaskIds).toEqual([]);
+          expect(result.reviewTaskIds).toEqual(["malformed"]);
+          expect(result.audit.result).toBe("defer");
+          expect(result.taskDecisions[0]?.reasonCodes).toEqual(["task-unknown-operator-review"]);
+        }
+      }
+    },
+  );
+
+  it("preserves recognized decisions and deny precedence alongside unknown work", () => {
+    const result = resolveAiGameTaskBatch({
+      featureFlags: { [AI_GAME_FEATURE_FLAGS.workloads]: true },
+      requests: [
+        { taskId: "dialogue", taskText: "The guard says hello" },
+        { taskId: "unclassified", taskText: "Calculate a weather forecast" },
+        { taskId: "blocked", taskText: "punish the faction" },
+      ],
+    });
+    expect(result.allowedTaskIds).toEqual(["dialogue"]);
+    expect(result.reviewTaskIds).toEqual(["unclassified"]);
+    expect(result.blockedTaskIds).toEqual(["blocked"]);
+    expect(result.audit.result).toBe("deny");
+  });
+
+  it("denies unknown work when the workload flag is disabled or unavailable", () => {
+    for (const featureFlags of [undefined, {}, { [AI_GAME_FEATURE_FLAGS.workloads]: false }]) {
+      const result = resolveAiGameTaskBatch({
+        featureFlags,
+        requests: [{ taskId: "unknown", taskText: "A weather forecast", taskKind: "future" as never }],
+      });
+      expect(result.allowedTaskIds).toEqual([]);
+      expect(result.reviewTaskIds).toEqual([]);
+      expect(result.blockedTaskIds).toEqual(["unknown"]);
+      expect(result.audit.result).toBe("deny");
+      expect(result.taskDecisions[0]?.reasonCodes).toEqual(["feature-disabled"]);
+    }
   });
 
   it("allows system-originated review-bound work and preserves empty batches", () => {
