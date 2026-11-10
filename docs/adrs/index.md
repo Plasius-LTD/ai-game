@@ -22,3 +22,4 @@
 - [ADR-0020: Hosted OIDC Package Publication](./adr-0020-hosted-oidc-package-publication.md)
 
 - [ADR 0021: Training upgrade rollout compatibility](adr-0021-training-upgrade-rollout-compatibility.md)
+- [ADR 0022: Unknown game task classifications require review](adr-0022-unknown-task-review-boundary.md)
